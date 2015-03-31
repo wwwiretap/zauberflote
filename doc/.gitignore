@@ -1,0 +1,12 @@
+# output
+*.dvi
+*.ps
+*.pdf
+
+# intermediate files
+*.out
+*.aux
+*.log
+*.blg
+*.bbl
+*.ent
