@@ -14,9 +14,10 @@
 \makeatother
 \crefnames{part,chapter,section}{\S}{\S\S}
 
+
 \begin{document}
 
-\title{\Large \bf A Transparent Peer-to-Peer CDN}
+\title{\Large \bf Zauberfl\"{o}te: A Transparent Peer-to-Peer CDN}
 
 \author{
     {\rm Anish Athalye}\\
@@ -33,15 +34,68 @@
 
 \thispagestyle{empty}
 
-\begin{abstract}
-
-\end{abstract}
-
 \section{Introduction}
+
+
+Currently, peer-to-peer content delivery networks exist, yet are usually
+closed-source. PeerCDN is one such example found in industry; it offloads site
+hosting to users of a site, significantly lowering strain on content delivery
+from a central source. In our project, we aim to create an open-sourced system
+that will allow developers to easily integrate a peer-to-peer CDN to expedite
+content delivery to clients even when operating under heavy load. We plan to
+base our design on the BitTorrent protocol~\cite{cohen:bittorrent}, where
+clients requesting content will attempt to receive chunks of data from other
+clients rather than a central server. We plan to begin with tracker software
+and then add client software for communicating with the tracker and sharing
+content with peers.
 
 \section{Design}
 
+We plan to implement a peer-to-peer CDN using a hybrid HTTP/P2P setup. For the
+peer-to-peer part of the service, we will use a BitTorrent-like protocol to
+share data between clients. We will use intelligent client software that uses
+both HTTP and P2P to minimize latency and maximize throughput.
+
+We will have a centralized tracker, a server that keeps track of file metadata
+and facilitates matchmaking between peers. This server will not host the file
+contents themselves. The server will make use of cryptographic hash functions
+to guarantee the integrity of data and prevent malicious clients from
+distributing bad data.
+
+We will have a separate HTTP server to serve content and bootstrap peers when
+there are no other clients with a copy of the content.
+
+On the client side, we plan to use only HTML5 APIs to communicate with our CDN.
+This will make it simple to start using the CDN, and all clients with
+up-to-date browsers will just work with the service. The process will be
+entirely transparent to end users, because it will not require the use of
+browser extensions or other custom software that has to be manually installed.
+We plan to make use of WebRTC for peer-to-peer functionality~\cite{w3c:webrtc}.
+
 \section{Goals}
+
+Zauberfl\"{o}te provides basic framework of peer-to-peer content delivery on
+which other systems can be built. We plan to build in the initial
+infrastructure and then conduct tests to evaluate the performance of the
+system.
+
+To demonstrate the robustness of our peer-to-peer CDN system, we plan to
+measure the latency of several large data transfers and compare this
+performance to that of a simple centralized system. Our results will help
+identify scenarios in which such peer-to-peer CDN systems enhance the
+performance of an application.
+
+After measuring the performance of our system, we intend to work on decreasing
+the latency involved with obtaining large resources on the internet by allowing
+data transfer from peers, rather than a central server, when operating under
+heavy load. At the same time, we want to attempt to ensure that page loads are
+not any slower than they would be with the use of only a central server by
+heuristically evaluating the load times of data via peer-to-peer transfers as
+compared to downloading from the central server.
+
+Potential extensions include peer-to-peer video streaming and multiplayer
+gaming. We hope that the latency decrease in such applications would be
+significant, leading to a better overall user experience.
 
 {\footnotesize \bibliographystyle{ieeetr}
 \bibliography{paper}}
