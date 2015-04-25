@@ -53,6 +53,8 @@ function createConnection() {
   myChannel.onclose = channelClosed;
 
   yourPc.ondatachannel = onOtherChannel;
+
+  myPc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
 }
 
 function onOtherChannel(e) {
