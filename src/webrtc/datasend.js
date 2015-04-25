@@ -15,6 +15,8 @@ var PeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnecti
 var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
 var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
 navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+
+// webRTC configs
 offerConstraints = {};
 var peerChannelConfiguration = {
   iceServers: [
@@ -36,7 +38,6 @@ errorHandler = function(err) {
 }
 
 function createConnection() {
-  // WebRTC configs
 
 
   pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
