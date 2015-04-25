@@ -1,4 +1,6 @@
-var pc;
+var myPc;
+var yourPc;
+
 var myChannel;
 var yourChannel;
 
@@ -33,23 +35,24 @@ errorHandler = function(err) {
 }
 
 function createConnection() {
-  pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
+  myPc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
+  yourPc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
+
   console.log('Created remote peer connection object pc');
 
-  pc.onicecandidate = getRemoteIceCandidate;
+
+  myPc.onicecandidate = getRemoteIceCandidate;
 
   // channel configs
   channelOptions = {};
   channelName = "senderChannel";
-  myChannel = pc.createDataChannel(channelName, channelOptions);
+  myChannel = myPc.createDataChannel(channelName, channelOptions);
   myChannel.onopen = channelOpen;
   myChannel.onerror = channelError;
   myChannel.onmessage = channelMessage;
   myChannel.onclose = channelClosed;
 
-  pc.ondatachannel = onOtherChannel;
-
-  pc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
+  yourPc.ondatachannel = onOtherChannel;
 }
 
 function onOtherChannel(e) {
@@ -77,7 +80,7 @@ function channelClosed() {
 }
 
 function createRemoteOffer(offer) {
-  pc.setLocalDescription(offer);
+  myPc.setLocalDescription(offer);
   send("offer", JSON.stringify(offer));
 }
 
@@ -95,11 +98,10 @@ function send(descriptor, item) {
 
 function receiveRemoteOffer(offer) {
   // offer = JSON.parse(offer);
-  pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
   offer = new SessionDescription(offer);
-  pc.setRemoteDescription(offer, function() {
-    pc.createAnswer(function(answer) {
-      pc.setLocalDescription(answer, function(){
+  yourPc.setRemoteDescription(offer, function() {
+    yourPc.createAnswer(function(answer) {
+      yourPc.setLocalDescription(answer, function(){
         send("answer", JSON.stringify(answer));
       });
     }, errorHandler, offerConstraints);
@@ -107,15 +109,14 @@ function receiveRemoteOffer(offer) {
 }
 
 function receiveIceCandidate(candidate) {
-  pc.addIceCandidate(new RTCIceCandidate({
-    sdpMLineIndex: candidate.sdpMLineIndex,
-    candidate: candidate.candidate
-  }));
-  pc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
+  myPc.addIceCandidate(new RTCIceCandidate(candidate));
+  yourPc.addIceCandidate(new RTCIceCandidate(candidate));
+
+  myPc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
 }
 
 function receiveAnswer(answer) {
-  pc.setRemoteDescription(new RTCSessionDescription(answer), function() {}, errorHandler);
+  myPc.setRemoteDescription(new RTCSessionDescription(answer), function() {}, errorHandler);
 }
 
 createConnection();
