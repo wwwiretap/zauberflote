@@ -2,22 +2,14 @@ var pc;
 var myChannel;
 var yourChannel;
 
-// input your IP address
-
-// I know my IP
-
-// on document load
-// open connection with your IP via STUN server
-// transfer set data
-
-
+// Shimming
 var PeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
 var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
 navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 
-// webRTC configs
 offerConstraints = {};
+// WebRTC configs
 var peerChannelConfiguration = {
   iceServers: [
     {url: "stun:stun.l.google.com:19302"},
@@ -27,19 +19,20 @@ var peerChannelConfiguration = {
     {url: "stun:stun4.l.google.com:19302"}
   ]
 };
+
 var peerChannelOptions = {
   optional: [{
     RtpDataChannels: true
   }]
 }
 
+offerConstraints = {};
+
 errorHandler = function(err) {
   console.error(err);
 }
 
 function createConnection() {
-
-
   pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
   console.log('Created remote peer connection object pc');
 
@@ -49,6 +42,7 @@ function createConnection() {
   channelOptions = {};
   channelName = "senderChannel";
   myChannel = pc.createDataChannel(channelName, channelOptions);
+  myChannel.onopen = channelOpen;
   myChannel.onerror = channelError;
   myChannel.onmessage = channelMessage;
   myChannel.onclose = channelClosed;
@@ -60,9 +54,14 @@ function createConnection() {
 
 function onOtherChannel(e) {
   yourChannel = e.channel;
+  yourChannel.onopen = channelOpen;
   yourChannel.onmessage = channelMessage;
   yourChannel.onerror = channelError;
   yourchannel.onclose = channelClosed;
+}
+
+function channelOpen() {
+  console.error("Channel opened!");
 }
 
 function channelError(err) {
@@ -98,11 +97,8 @@ function receiveRemoteOffer(offer) {
   // offer = JSON.parse(offer);
   pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
   offer = new SessionDescription(offer);
-  console.log("offer: \t", offer)
   pc.setRemoteDescription(offer, function() {
-    console.log("set remote desc");
     pc.createAnswer(function(answer) {
-      console.log("created answer \t", answer);
       pc.setLocalDescription(answer, function(){
         send("answer", JSON.stringify(answer));
       });
