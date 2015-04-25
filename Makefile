@@ -1,4 +1,5 @@
 BINARIES = \
+	   fiddler \
 
 BINDIR := bin
 
