@@ -111,6 +111,11 @@ function receiveIceCandidate(candidate) {
     sdpMLineIndex: candidate.sdpMLineIndex,
     candidate: candidate.candidate
   }));
+  pc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
+}
+
+function receiveAnswer(answer) {
+  pc.setRemoteDescription(new RTCSessionDescription(answer), function() {}, errorHandler);
 }
 
 createConnection();
