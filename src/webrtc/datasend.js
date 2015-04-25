@@ -16,28 +16,30 @@ var IceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
 var SessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
 navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 offerConstraints = {};
+var peerChannelConfiguration = {
+  iceServers: [
+    {url: "stun:stun.l.google.com:19302"},
+    {url: "stun:stun1.l.google.com:19302"},
+    {url: "stun:stun2.l.google.com:19302"},
+    {url: "stun:stun3.l.google.com:19302"},
+    {url: "stun:stun4.l.google.com:19302"}
+  ]
+};
+var peerChannelOptions = {
+  optional: [{
+    RtpDataChannels: true
+  }]
+}
+
 errorHandler = function(err) {
   console.error(err);
 }
 
 function createConnection() {
   // WebRTC configs
-  var configuration = {
-    iceServers: [
-      {url: "stun:stun.l.google.com:19302"},
-      {url: "stun:stun1.l.google.com:19302"},
-      {url: "stun:stun2.l.google.com:19302"},
-      {url: "stun:stun3.l.google.com:19302"},
-      {url: "stun:stun4.l.google.com:19302"}
-    ]
-  };
-  var options = {
-    optional: [{
-      RtpDataChannels: true
-    }]
-  }
-  
-  pc = new PeerConnection(configuration, options);
+
+
+  pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
   console.log('Created remote peer connection object pc');
 
   pc.onicecandidate = getRemoteIceCandidate;
@@ -49,7 +51,7 @@ function createConnection() {
   myChannel.onerror = channelError;
   myChannel.onmessage = channelMessage;
   myChannel.onclose = channelClosed;
-  
+
   pc.ondatachannel = onOtherChannel;
 
   pc.createOffer(createRemoteOffer, errorHandler, offerConstraints);
@@ -61,7 +63,7 @@ function onOtherChannel(e) {
   yourChannel.onerror = channelError;
   yourchannel.onclose = channelClosed;
 }
-  
+
 function channelError(err) {
   console.error("Channel Error:",err);
 }
@@ -92,12 +94,19 @@ function send(descriptor, item) {
 }
 
 function receiveRemoteOffer(offer) {
-  // offer = new SessionDescription(JSON.parse(offer));
-  pc.setRemoteDescription(offer);
-  pc.createAnswer(function(answer) {
-    pc.setLocalDescription(answer);
-    send("answer", JSON.stringify(answer));
-  }, errorHandler, offerConstraints);
+  // offer = JSON.parse(offer);
+  pc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
+  offer = new SessionDescription(offer);
+  console.log("offer: \t", offer)
+  pc.setRemoteDescription(offer, function() {
+    console.log("set remote desc");
+    pc.createAnswer(function(answer) {
+      console.log("created answer \t", answer);
+      pc.setLocalDescription(answer, function(){
+        send("answer", JSON.stringify(answer));
+      });
+    }, errorHandler, offerConstraints);
+  });
 }
 
 function receiveIceCandidate(candidate) {
@@ -117,13 +126,13 @@ createConnection();
 //   receiveChannel.onopen = handleReceiveChannelStateChange;
 //   receiveChannel.onclose = handleReceiveChannelStateChange;
 // }
-// 
+//
 // function gotRemoteDescription(desc) {
 //   pc.setLocalDescription(desc);
 //   console.log('Answer from pc \n' + desc.sdp);
 //   localPeerConnection.setRemoteDescription(desc);
 // }
-// 
+//
 // function gotLocalDescription(desc) {
 //   localPeerConnection.setLocalDescription(desc);
 //   console.log('Offer from localPeerConnection \n' + desc.sdp);
@@ -139,7 +148,7 @@ createConnection();
 //   sendChannel.send(data);
 //   console.log('Sent data: ' + data);
 // }
-// 
+//
 // function closeDataChannels() {
 //   console.log('Closing data channels');
 //   sendChannel.close();
@@ -160,7 +169,7 @@ createConnection();
 //   dataChannelSend.placeholder =
 //     'Press Start, enter some text, then press Send.';
 // }
-// 
+//
 // function gotLocalCandidate(event) {
 //   console.log('local ice callback');
 //   if (event.candidate) {
@@ -168,13 +177,13 @@ createConnection();
 //     console.log('Local ICE candidate: \n' + event.candidate.candidate);
 //   }
 // }
-// 
-// 
+//
+//
 // function handleMessage(event) {
 //   console.log('Received message: ' + event.data);
 //   dataChannelReceive.value = event.data;
 // }
-// 
+//
 // function handleSendChannelStateChange() {
 //   var readyState = sendChannel.readyState;
 //   console.log('Send channel state is: ' + readyState);
@@ -190,12 +199,12 @@ createConnection();
 //     closeButton.disabled = true;
 //   }
 // }
-// 
+//
 // function handleReceiveChannelStateChange() {
 //   var readyState = receiveChannel.readyState;
 //   console.log('Receive channel state is: ' + readyState);
 // }
-// 
+//
 //   localPeerConnection = window.localPeerConnection =
 //     new webkitRTCPeerConnection(servers, {
 //       optional: [{
@@ -203,7 +212,7 @@ createConnection();
 //       }]
 //     });
 //   console.log("created local peer connection " + localPeerConnection);
-// 
+//
 //   try {
 //     // Reliable Data Channels not yet supported in Chrome
 //     sendChannel = localPeerConnection.createDataChannel('sendDataChannel', {
