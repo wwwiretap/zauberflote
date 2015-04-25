@@ -5,12 +5,16 @@ BINDIR := bin
 BPATHS := $(BINARIES:%=$(BINDIR)/%)
 SRCFILES := $(shell find src/ -type f -name '*.go')
 
-.PHONY: all fmt clean
+.PHONY: all deps fmt clean
 
 all: $(BPATHS)
 
+deps: export GOPATH = $(CURDIR)
+deps:
+	go get ./...
+
 $(BPATHS): export GOPATH = $(CURDIR)
-$(BPATHS): $(SRCFILES)
+$(BPATHS): $(SRCFILES) deps
 	go build -o $@ $(notdir $@)
 
 fmt:
