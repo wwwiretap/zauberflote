@@ -12,7 +12,7 @@ all: $(BPATHS)
 
 deps: export GOPATH = $(CURDIR)
 deps:
-	go get ./...
+	go get -d ./...
 
 $(BPATHS): export GOPATH = $(CURDIR)
 $(BPATHS): $(SRCFILES) deps
