@@ -92,7 +92,7 @@ function send(descriptor, item) {
 }
 
 function receiveRemoteOffer(offer) {
-  offer = new SessionDescription(JSON.parse(offer));
+  // offer = new SessionDescription(JSON.parse(offer));
   pc.setRemoteDescription(offer);
   pc.createAnswer(function(answer) {
     pc.setLocalDescription(answer);
@@ -100,6 +100,12 @@ function receiveRemoteOffer(offer) {
   }, errorHandler, offerConstraints);
 }
 
+function receiveIceCandidate(candidate) {
+  pc.addIceCandidate(new RTCIceCandidate({
+    sdpMLineIndex: candidate.sdpMLineIndex,
+    candidate: candidate.candidate
+  }));
+}
 
 createConnection();
 
@@ -190,10 +196,6 @@ createConnection();
 //   console.log('Receive channel state is: ' + readyState);
 // }
 // 
-
-
-
-
 //   localPeerConnection = window.localPeerConnection =
 //     new webkitRTCPeerConnection(servers, {
 //       optional: [{
