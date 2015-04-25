@@ -6,9 +6,14 @@ import (
 	"sync"
 	. "types"
 
-	"github.com/rs/cors"
 	"github.com/googollee/go-socket.io"
+	"github.com/rs/cors"
 )
+
+type PeerReply struct {
+	Hash  string   `json:"hash"`
+	Peers []PeerId `json:"peers"`
+}
 
 func main() {
 	server, err := socketio.NewServer(nil)
@@ -30,7 +35,8 @@ func main() {
 		so.On("peer-request", func(hash string) {
 			log.Println("peer-request:", hash)
 			peers := tracker.Peers(hash)
-			so.Emit("peer-reply", peers)
+			reply := PeerReply{hash, peers}
+			so.Emit("peer-reply", reply)
 		})
 
 		so.On("disconnection", func() {
@@ -44,7 +50,7 @@ func main() {
 	})
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 	})
 
@@ -62,7 +68,6 @@ func never(err error) {
 type PeerId string
 
 type Tracker interface {
-
 	Connect(id PeerId)
 
 	Disconnect(id PeerId)
@@ -70,13 +75,12 @@ type Tracker interface {
 	Add(id PeerId, hash string)
 
 	Peers(hash string) []PeerId
-
 }
 
 type tracker struct {
 	infos map[PeerId]Unit
-	data map[string]map[PeerId]Unit
-	mu sync.Mutex
+	data  map[string]map[PeerId]Unit
+	mu    sync.Mutex
 }
 
 func CreateTracker() Tracker {
