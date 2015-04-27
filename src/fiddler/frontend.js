@@ -65,6 +65,14 @@ function start() {
   dataChannel.onopen = function (event) {
     dataChannel.send("Hello World!");
   };
+
+  pc.ondatachannel = function(ev) {
+    console.log(ev);
+    ev.channel.onmessage = function(event) {
+      console.log('got event in channel');
+      console.log(event);
+    }
+  };
 }
 
 function localDescCreated(desc) {
