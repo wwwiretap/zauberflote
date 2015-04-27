@@ -1,6 +1,6 @@
-var localConnection;
+// var localConnection;
 var remoteConnection;
-var sendChannel;
+// var sendChannel;
 var receiveChannel;
 var pcConstraint;
 var dataConstraint;
@@ -21,54 +21,14 @@ var servers = { iceServers: [
 function createConnection() {
   pcConstraint = null;
   
-  // global localConnection
-  localConnection = new PeerConnection(servers, pcConstraint);
-  // window.localConnection = localConnection;
-  console.log("new peer connection object localConnection");
-  
-  sendChannel = localConnection.createDataChannel("sendDataChannel", dataConstraint);
-  console.log("created send data channel");
-
-  localConnection.onicecandidate = function(event) {
-    console.log("local ice callback");
-    if (event.candidate) {
-      remoteConnection.addIceCandidate(event.candidate,
-        function() {
-          console.log("remote connection added ice candidate");
-        },
-        function() {
-          console.log("remote connection failed to add ice candidate");
-        }
-      );
-      console.log("local ice candidate: \t" + event.candidate.candidate);
-    }
-  }
-
-  sendChannel.onopen = function() {
-    var readyState = sendChannel.readyState;
-    console.log("send channel state is: " + readyState);
-  }
-  sendChannel.onclose = function() {
-    var readyState = sendChannel.readyState;
-    console.log("send channel state is: " + readyState);
-  }
-  
-  // global remoteConnection
   remoteConnection = new PeerConnection(servers, pcConstraint);
-  // window.remoteConnection = remoteConnection;
   console.log("created remote peer connection object remoteConnection");
 
   remoteConnection.onicecandidate = function(event) {
     console.log("remote ice callback");
     if (event.candidate) {
-      localConnection.addIceCandidate(event.candidate,
-        function() {
-          console.log("local connection added ice candidate");
-        },
-        function() {
-          console.log("local connection failed to add ice candidate");
-        }
-      );
+      console.log("remote ice candidate: \t" + event.candidate.candidate);
+      console.log("send this candidate to local peer method receiveIceCandidateFromSender(" + event.candidate + ")");
     }
   }
   remoteConnection.ondatachannel = function(event) {
@@ -82,24 +42,32 @@ function createConnection() {
       console.log("Receive channel state is: " + readyState);
     }
   }
-  
-  localConnection.createOffer(function(desc) {
-      localConnection.setLocalDescription(desc);
-      console.log("offer from localConnection \t" + desc.sdp);
-      remoteConnection.setRemoteDescription(desc);
-      remoteConnection.createAnswer(function(desc) {
-          remoteConnection.setLocalDescription(desc);
-          console.log("answer from remoteConnection \t" + desc.sdp);
-          localConnection.setRemoteDescription(desc);
-        }, function(error) {
-          console.log("failed to create session description: " + error.toString());
-        }
-      );
+}
+
+function receiveIceCandidateFromSender(candidate) {
+  candidate = new RTCIceCandidate(candidate);
+  remoteConnection.addIceCandidate(candidate,
+    function() {
+      console.log("remote connection added ice candidate");
+    },
+    function() {
+      console.log("remote connection failed to add ice candidate");
+    }
+  );
+}
+
+function setRemoteConnectionDescriptionAndCreateAnswer(desc) {
+  remoteConnection.setRemoteDescription(desc);
+  remoteConnection.createAnswer(function(desc) {
+      remoteConnection.setLocalDescription(desc);
+      console.log("answer from remoteConnection \t" + desc.sdp);
+      console.log("send to local setLocalConnectionRemoteDescription(" + desc + ")");
     }, function(error) {
       console.log("failed to create session description: " + error.toString());
     }
   );
 }
+
 
 createConnection();   
 
