@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:5000');
+// var socket = io.connect('http://localhost:5000');
 
 var IS_CHROME = !!window.webkitRTCPeerConnection,
     RTCPeerConnection,
@@ -28,9 +28,13 @@ SignalingChannel.prototype.send = function(message) {
 
 var signalingChannel = new SignalingChannel();
 var configuration = {
-  'iceServers': [{
-    'url': (IS_CHROME ? 'stun:stun.l.google.com:19302' : 'stun:23.21.150.121')
-  }]
+  iceServers: [
+    {url: "stun:stun.l.google.com:19302"},
+    {url: "stun:stun1.l.google.com:19302"},
+    {url: "stun:stun2.l.google.com:19302"},
+    {url: "stun:stun3.l.google.com:19302"},
+    {url: "stun:stun4.l.google.com:19302"}
+  ]
 };
 var pc;
 
