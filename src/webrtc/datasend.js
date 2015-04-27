@@ -35,11 +35,10 @@ errorHandler = function(err) {
 }
 
 function createConnection() {
+  // create peer connection
   myPc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
   yourPc = new PeerConnection(peerChannelConfiguration, peerChannelOptions);
-
   console.log('Created remote peer connection object pc');
-
 
   myPc.onicecandidate = getRemoteIceCandidate;
 
