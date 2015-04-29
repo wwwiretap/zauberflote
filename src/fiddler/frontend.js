@@ -7,12 +7,11 @@ socket.on("connect", function(){
   console.log("connected socket!");
 });
 socket.on("peer-reply", function(data) {
-  data = JSON.parse(data);
-  peers = data["peers"];
+  peers = data.peers;
+  console.log(data.peers);
   start();
-}
+});
 socket.on("webrtc-data", function(data){
-  data = JSON.parse(data);
   signalingChannel.onmessage(data);
 });
 socket.on("disconnect", function(){
@@ -65,20 +64,19 @@ SignalingChannel.prototype.send = function(peer, message) {
   console.log(message);
   // right now just get the first peer
   var data = {"peer_id": peer, "data": message};
-  socket.emit("webrtc-data", data);
+  socket.emit("webrtc-data", JSON.stringify(data));
 };
 var signalingChannel = new SignalingChannel();
 signalingChannel.onmessage = function (evt) {
   if (!pc)
     start();
 
-  var message = evt.data;
+  var message = JSON.parse(evt.data);
   if (message.sdp)
     pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
       // if we received an offer, we need to answer
       if (pc.remoteDescription.type == 'offer')
-        var localAnswerCreated = localAnswerHandler(evt.peer_id);
-        pc.createAnswer(localAnswerCreated, logError);
+        pc.createAnswer(localAnswerHandler(evt.peer_id), logError);
     }, logError);
   else
     pc.addIceCandidate(new RTCIceCandidate(message.candidate));
@@ -91,7 +89,7 @@ function start() {
   pc = new RTCPeerConnection(configuration);
   // send any ice candidates to the other peer
   pc.onicecandidate = function (evt) {
-    if (evt.candidate)
+    if (evt.candidate && peers.length > 0)
       // right now just send to first peer
       signalingChannel.send(peers[0], JSON.stringify({
         'candidate': evt.candidate,
@@ -135,7 +133,7 @@ function localAnswerHandler(peerId) {
         'peer_id': peerId
       }));
     }, logError);
-  }
+  };
 }
 
 function logError(error) {
@@ -166,7 +164,6 @@ $(document).ready(function() {
   askButton.on("click", function() {
     var hash = hashInput.val();
     socket.emit("peer-request", hash);
-    // start(hash);
   });
 });
 

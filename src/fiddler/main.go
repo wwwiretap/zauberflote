@@ -49,6 +49,7 @@ func main() {
 			}
 			webRTCdat := &WebRTCRequest{Data: request.Data, Peer: id}
 			peerSocket := tracker.GetSocket(request.Peer)
+			log.Println("sending to peer for webrtc: ", webRTCdat)
 			(*peerSocket).Emit("webrtc-data", webRTCdat)
 		})
 
