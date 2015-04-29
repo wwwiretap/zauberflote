@@ -8,7 +8,6 @@ socket.on("connect", function(){
 socket.on("peer-reply", function(data){
   console.log(data);
   console.log(data.peers[0]);
-  // socket.emit(
 });
 socket.on("disconnect", function(){
   console.log("disconnected socket");
@@ -127,9 +126,6 @@ function logError(error) {
 var o = signalingChannel.onmessage;
 
 
-
-
-
 // -------------------------------------------------
 // FRONTEND DOC ELEMENTS
 // -------------------------------------------------
@@ -150,7 +146,6 @@ $(document).ready(function() {
 
   askButton.on("click", function() {
     var hash = hashInput.val();
-    // socket.emit("peer-request", hash);
     start(hash);
   });
 });

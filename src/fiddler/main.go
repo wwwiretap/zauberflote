@@ -9,15 +9,13 @@ import (
 	"github.com/googollee/go-socket.io"
 	"github.com/rs/cors"
   "encoding/json"
+  "crypto/rand"
+  "math/big"
 )
 
 type PeerReply struct {
 	Hash  string   `json:"hash"`
 	Peers []PeerId `json:"peers"`
-}
-
-type Message struct {
-  Name, Text string
 }
 
 func main() {
@@ -47,10 +45,11 @@ func main() {
       log.Println(dat)
       peers := tracker.Peers(dat["hash"].(string))
       for _, peer := range peers {
+        reqId := tracker.StoreRequest(peer)
+        webRTCdat := tracker.PeerRequest(dat, reqId)
         // TODO: get peer socket
-        peerso.Emit("webrtc-data", hash)
+        // peerso.Emit("webrtc-data", webRTCdat)
       }
-      // TODO: include data so we can send back answer
     })
 
 		so.On("peer-request", func(hash string) {
@@ -87,6 +86,7 @@ func never(err error) {
 }
 
 type PeerId string
+type ReqId int64
 
 type Tracker interface {
 	Connect(id PeerId)
@@ -96,19 +96,33 @@ type Tracker interface {
 	Add(id PeerId, hash string)
 
 	Peers(hash string) []PeerId
+
+  StoreRequest(id PeerId) ReqId
+
+  PeerRequest(dat map[string]interface{}, id ReqId) string
+
+  GetRequest(id ReqId) PeerId
 }
 
 type tracker struct {
 	infos map[PeerId]Unit
 	data  map[string]map[PeerId]Unit
+  webrtcRequests map[ReqId]PeerId
 	mu    sync.Mutex
+}
+
+func nrand() int64 {
+  max := big.NewInt(int64(1) << 62)
+  bigx, _ := rand.Int(rand.Reader, max)
+  x := bigx.Int64()
+  return x
 }
 
 func CreateTracker() Tracker {
 	tr := &tracker{}
 	tr.infos = make(map[PeerId]Unit)
 	tr.data = make(map[string]map[PeerId]Unit)
-
+  tr.webrtcRequests = make(map[ReqId])PeerId)
 	return tr
 }
 
@@ -125,7 +139,6 @@ func (tr *tracker) Disconnect(id PeerId) {
 	for _, v := range tr.data {
 		delete(v, id)
 	}
-
 }
 
 func (tr *tracker) Add(id PeerId, hash string) {
@@ -149,3 +162,32 @@ func (tr *tracker) Peers(hash string) []PeerId {
 	}
 	return peers
 }
+
+func (tr *tracker) StoreRequest(id PeerId) ReqId {
+  tr.mu.Lock()
+  defer tr.mu.Unlock()
+  reqId := nrand()
+  tr.webrtcRequests[reqId] = id
+  return reqId
+}
+
+func (tr *tracker) PeerRequest(dat map[string]interface{}, id ReqId) string {
+  tr.mu.Lock()
+  defer tr.mu.Unlock()
+  peerDat := make(map[string]interface{})
+  for k, v := range dat {
+    peerDat[k] = v
+  }
+  peerDat["req_id"] = id
+  request, _ := json.Marshal(peerDat)
+  return string(request)
+}
+
+func (tr *tracker) GetRequest(id ReqId) PeerId {
+  tr.mu.Lock()
+  defer tr.mu.Unlock()
+  peerId := tr.webrtcRequests[id]
+  delete(tr.webrtcRequests, id)  // conserve memory
+  return peerId
+}
+
