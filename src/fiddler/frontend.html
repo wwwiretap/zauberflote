@@ -3,11 +3,20 @@
   <head>
     <meta charset="utf-8"/>
     <title>Fiddler</title>
-    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="socket.io.js"></script>
+    <script src="sha256.js"></script>
     <script src="frontend.js"></script>
   </head>
   <body>
     <h1>Fiddler</h1>
+    <p>Input text here:</p>
+    <textarea id="content-input"></textarea>
+    <button id="advertise-button">Advertise</button>
+    <br>
+    <p>Input hash here:</p>
+    <textarea id="hash-input"></textarea>
+    <button id="ask-button">Ask</button>
+    <p id="content-output">Content will appear here.</p>
   </body>
 </html>

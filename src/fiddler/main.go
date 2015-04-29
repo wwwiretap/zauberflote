@@ -8,11 +8,16 @@ import (
 
 	"github.com/googollee/go-socket.io"
 	"github.com/rs/cors"
+  "encoding/json"
 )
 
 type PeerReply struct {
 	Hash  string   `json:"hash"`
 	Peers []PeerId `json:"peers"`
+}
+
+type Message struct {
+  Name, Text string
 }
 
 func main() {
@@ -31,6 +36,22 @@ func main() {
 			log.Println("add:", hash)
 			tracker.Add(id, hash)
 		})
+
+    so.On("webrtc-data", func(hash string) {
+      log.Println("webrtc-data:", hash)
+      byt := []byte(hash)
+      var dat map[string]interface{}
+      if err := json.Unmarshal(byt, &dat); err != nil {
+        panic(err)
+      }
+      log.Println(dat)
+      peers := tracker.Peers(dat["hash"].(string))
+      for _, peer := range peers {
+        // TODO: get peer socket
+        peerso.Emit("webrtc-data", hash)
+      }
+      // TODO: include data so we can send back answer
+    })
 
 		so.On("peer-request", func(hash string) {
 			log.Println("peer-request:", hash)
