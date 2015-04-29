@@ -47,6 +47,7 @@ func main() {
       for _, peer := range peers {
         reqId := tracker.StoreRequest(peer)
         webRTCdat := tracker.PeerRequest(dat, reqId)
+        log.Println(webRTCdat)
         // TODO: get peer socket
         // peerso.Emit("webrtc-data", webRTCdat)
       }
@@ -122,7 +123,7 @@ func CreateTracker() Tracker {
 	tr := &tracker{}
 	tr.infos = make(map[PeerId]Unit)
 	tr.data = make(map[string]map[PeerId]Unit)
-  tr.webrtcRequests = make(map[ReqId])PeerId)
+  tr.webrtcRequests = make(map[ReqId]PeerId)
 	return tr
 }
 
@@ -166,7 +167,7 @@ func (tr *tracker) Peers(hash string) []PeerId {
 func (tr *tracker) StoreRequest(id PeerId) ReqId {
   tr.mu.Lock()
   defer tr.mu.Unlock()
-  reqId := nrand()
+  reqId := ReqId(nrand())
   tr.webrtcRequests[reqId] = id
   return reqId
 }

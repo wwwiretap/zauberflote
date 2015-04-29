@@ -5,9 +5,9 @@ var socket = io("http://localhost:5000");
 socket.on("connect", function(){
   console.log("connected socket!");
 });
-socket.on("peer-reply", function(data){
-  console.log(data);
-  console.log(data.peers[0]);
+socket.on("webrtc-data", function(data){
+  data = JSON.parse(data);
+  signalingChannel.onmessage(data);
 });
 socket.on("disconnect", function(){
   console.log("disconnected socket");
@@ -69,7 +69,8 @@ signalingChannel.onmessage = function (evt) {
     pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
       // if we received an offer, we need to answer
       if (pc.remoteDescription.type == 'offer')
-        pc.createAnswer(localDescCreated, logError);
+        var localAnswerCreated = localAnswerHandler(message.hash, message.peer_id);
+        pc.createAnswer(localAnswerCreated, logError);
     }, logError);
   else
     pc.addIceCandidate(new RTCIceCandidate(message.candidate));
@@ -90,7 +91,8 @@ function start(hash) {
   };
   // let the 'negotiationneeded' event trigger offer generation
   pc.onnegotiationneeded = function () {
-    pc.createOffer(localDescCreated, logError);
+    var localOfferCreated = localOfferHandler(hash);
+    pc.createOffer(localOfferCreated, logError);
   }
   pc.ondatachannel = function(ev) {
     console.log(ev);
@@ -110,13 +112,27 @@ function start(hash) {
   };
 }
 
-function localDescCreated(desc) {
-  pc.setLocalDescription(desc, function () {
-    signalingChannel.send(JSON.stringify({
-      'sdp': pc.localDescription,
-      'hash': hash
-    }));
-  }, logError);
+function localOfferCreated(hash) {
+  return function(desc) {
+    pc.setLocalDescription(desc, function () {
+      signalingChannel.send(JSON.stringify({
+        'sdp': pc.localDescription,
+        'hash': hash
+      }));
+    }, logError);
+  }
+}
+
+function localAnswerHandler(hash, peerId) {
+  return function(desc) {
+    pc.setLocalDescription(desc, function () {
+      signalingChannel.send(JSON.stringify({
+        'sdp': pc.localDescription,
+        'hash': hash,
+        'peer_id': peerId
+      }));
+    }, logError);
+  }
 }
 
 function logError(error) {
