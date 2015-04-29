@@ -2,9 +2,15 @@
 // WEBSOCKETS
 // -------------------------------------------------
 var socket = io("http://localhost:5000");
+var peers = [];
 socket.on("connect", function(){
   console.log("connected socket!");
 });
+socket.on("peer-reply", function(data) {
+  data = JSON.parse(data);
+  peers = data["peers"];
+  start();
+}
 socket.on("webrtc-data", function(data){
   data = JSON.parse(data);
   signalingChannel.onmessage(data);
@@ -53,23 +59,25 @@ function SignalingChannel(peerConnection) {
   // Setup the signaling channel here
   this.peerConnection = peerConnection;
 }
-SignalingChannel.prototype.send = function(message) {
+SignalingChannel.prototype.send = function(peer, message) {
   // Send messages using your favorite real-time network
   console.log("Send:");
   console.log(message);
-  socket.emit("webrtc-data", message);
+  // right now just get the first peer
+  var data = {"peer_id": peer, "data": message};
+  socket.emit("webrtc-data", data);
 };
 var signalingChannel = new SignalingChannel();
 signalingChannel.onmessage = function (evt) {
   if (!pc)
     start();
 
-  var message = evt;
+  var message = evt.data;
   if (message.sdp)
     pc.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
       // if we received an offer, we need to answer
       if (pc.remoteDescription.type == 'offer')
-        var localAnswerCreated = localAnswerHandler(message.hash, message.peer_id);
+        var localAnswerCreated = localAnswerHandler(evt.peer_id);
         pc.createAnswer(localAnswerCreated, logError);
     }, logError);
   else
@@ -78,20 +86,19 @@ signalingChannel.onmessage = function (evt) {
 
 
 // INITIATE CONNECTION
-function start(hash) {
+function start() {
 
   pc = new RTCPeerConnection(configuration);
   // send any ice candidates to the other peer
   pc.onicecandidate = function (evt) {
     if (evt.candidate)
-      signalingChannel.send(JSON.stringify({
+      // right now just send to first peer
+      signalingChannel.send(peers[0], JSON.stringify({
         'candidate': evt.candidate,
-        'hash': hash
       }));
   };
   // let the 'negotiationneeded' event trigger offer generation
   pc.onnegotiationneeded = function () {
-    var localOfferCreated = localOfferHandler(hash);
     pc.createOffer(localOfferCreated, logError);
   }
   pc.ondatachannel = function(ev) {
@@ -112,23 +119,19 @@ function start(hash) {
   };
 }
 
-function localOfferCreated(hash) {
-  return function(desc) {
-    pc.setLocalDescription(desc, function () {
-      signalingChannel.send(JSON.stringify({
-        'sdp': pc.localDescription,
-        'hash': hash
-      }));
-    }, logError);
-  }
+function localOfferCreated(desc) {
+  pc.setLocalDescription(desc, function () {
+    signalingChannel.send(peers[0], JSON.stringify({
+      'sdp': pc.localDescription,
+    }));
+  }, logError);
 }
 
-function localAnswerHandler(hash, peerId) {
+function localAnswerHandler(peerId) {
   return function(desc) {
     pc.setLocalDescription(desc, function () {
-      signalingChannel.send(JSON.stringify({
+      signalingChannel.send(peerId, JSON.stringify({
         'sdp': pc.localDescription,
-        'hash': hash,
         'peer_id': peerId
       }));
     }, logError);
@@ -162,7 +165,8 @@ $(document).ready(function() {
 
   askButton.on("click", function() {
     var hash = hashInput.val();
-    start(hash);
+    socket.emit("peer-request", hash);
+    // start(hash);
   });
 });
 

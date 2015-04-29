@@ -5,6 +5,9 @@ Client-tracker communication over websockets.
 Client tells tracker that it has a hash
 "add" : "{hash}"
 
+Client asks which peers have a hash
+"peer-request" : {"hash"}
+
 Tracker tells client about peers who have a hash
 "peer-response" : {"hash": "{hash}", "peers": ["{id}", ...]}
 
@@ -17,12 +20,12 @@ WebRTC data transfer protocol:
 Peer A                   |     Server      |     Peer B
                          |      Add <---------advertise hash(X)
 ask for hash(X)          |                 |
-"webrtc-data"{cand,hash}---->peers(hash)----->o(candidate)
-"webrtc-data"{offer,hash}--->              |
-                         | generate req_id |
-                         | to peers(hash)---->o(offer, req_id)
+"peer-request"{hash}-------->              |
+                    <--------peers(hash)   |
+"webrtc-data"{cand,peer}---->socket(peer)----->o(candidate)
+"webrtc-data"{offer,hash}--->socket(peer)----->o(offer, peer)
                          |                 |  generate answer
-           o(answer)<------getsock(req_id)<---answer, req_id
+           o(answer)<--------socket(peer)<----answer, peer
 establish connection<------------------------>establish connection
 ask for hash(X)------------------------------>
                <------------------------------content
