@@ -13,11 +13,6 @@ import (
   "math/big"
 )
 
-type PeerReply struct {
-	Hash  string   `json:"hash"`
-	Peers []PeerId `json:"peers"`
-}
-
 func main() {
 	server, err := socketio.NewServer(nil)
 	never(err)
@@ -28,7 +23,7 @@ func main() {
 		log.Println("on connection")
 
 		id := PeerId(so.Id())
-		tracker.Connect(id)
+		tracker.Connect(id, &so)
 
 		so.On("add", func(hash string) {
 			log.Println("add:", hash)
@@ -43,22 +38,27 @@ func main() {
         panic(err)
       }
       log.Println(dat)
-      peers := tracker.Peers(dat["hash"].(string))
-      for _, peer := range peers {
-        reqId := tracker.StoreRequest(peer)
-        webRTCdat := tracker.PeerRequest(dat, reqId)
+      if rid, ok := dat["req_id"]; ok {
+        // this is an answer to a previous connection request
+        pid := tracker.GetRequest(ReqId(rid.(int64)))
+        webRTCdat := tracker.PeerReply(dat)
         log.Println(webRTCdat)
-        // TODO: get peer socket
-        // peerso.Emit("webrtc-data", webRTCdat)
+        peerSocket := tracker.GetSocket(PeerId(pid))
+        log.Println(peerSocket)
+        (*peerSocket).Emit("webrtc-data", webRTCdat)
+      } else {
+        // data needs to be sent to all peers with hash
+        peers := tracker.Peers(dat["hash"].(string))
+        for _, peer := range peers {
+          reqId := tracker.StoreRequest(peer)
+          webRTCdat := tracker.PeerRequest(dat, reqId)
+          log.Println(webRTCdat)
+          peerSocket := tracker.GetSocket(PeerId(peer))
+          log.Println(peerSocket)
+          (*peerSocket).Emit("webrtc-data", webRTCdat)
+        }
       }
     })
-
-		so.On("peer-request", func(hash string) {
-			log.Println("peer-request:", hash)
-			peers := tracker.Peers(hash)
-			reply := PeerReply{hash, peers}
-			so.Emit("peer-reply", reply)
-		})
 
 		so.On("disconnection", func() {
 			log.Println("disconnection")
@@ -90,9 +90,11 @@ type PeerId string
 type ReqId int64
 
 type Tracker interface {
-	Connect(id PeerId)
+	Connect(id PeerId, so *socketio.Socket)
 
 	Disconnect(id PeerId)
+
+  GetSocket(id PeerId) *socketio.Socket
 
 	Add(id PeerId, hash string)
 
@@ -103,10 +105,12 @@ type Tracker interface {
   PeerRequest(dat map[string]interface{}, id ReqId) string
 
   GetRequest(id ReqId) PeerId
+
+  PeerReply(dat map[string]interface{}) string
 }
 
 type tracker struct {
-	infos map[PeerId]Unit
+	infos map[PeerId]*socketio.Socket
 	data  map[string]map[PeerId]Unit
   webrtcRequests map[ReqId]PeerId
 	mu    sync.Mutex
@@ -121,16 +125,16 @@ func nrand() int64 {
 
 func CreateTracker() Tracker {
 	tr := &tracker{}
-	tr.infos = make(map[PeerId]Unit)
+	tr.infos = make(map[PeerId]*socketio.Socket)
 	tr.data = make(map[string]map[PeerId]Unit)
   tr.webrtcRequests = make(map[ReqId]PeerId)
 	return tr
 }
 
-func (tr *tracker) Connect(id PeerId) {
+func (tr *tracker) Connect(id PeerId, so *socketio.Socket) {
 	tr.mu.Lock()
 	defer tr.mu.Unlock()
-	tr.infos[id] = Unit{}
+	tr.infos[id] = so
 }
 
 func (tr *tracker) Disconnect(id PeerId) {
@@ -140,6 +144,10 @@ func (tr *tracker) Disconnect(id PeerId) {
 	for _, v := range tr.data {
 		delete(v, id)
 	}
+}
+
+func (tr *tracker) GetSocket(id PeerId) *socketio.Socket {
+  return tr.infos[id]
 }
 
 func (tr *tracker) Add(id PeerId, hash string) {
@@ -173,8 +181,6 @@ func (tr *tracker) StoreRequest(id PeerId) ReqId {
 }
 
 func (tr *tracker) PeerRequest(dat map[string]interface{}, id ReqId) string {
-  tr.mu.Lock()
-  defer tr.mu.Unlock()
   peerDat := make(map[string]interface{})
   for k, v := range dat {
     peerDat[k] = v
@@ -192,3 +198,13 @@ func (tr *tracker) GetRequest(id ReqId) PeerId {
   return peerId
 }
 
+func (tr *tracker) PeerReply(dat map[string]interface{}) string {
+  peerDat := make(map[string]interface{})
+  for k, v := range dat {
+    if k != "peer_id" {
+      peerDat[k] = v
+    }
+  }
+  request, _ := json.Marshal(peerDat)
+  return string(request)
+}
