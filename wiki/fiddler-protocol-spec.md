@@ -29,3 +29,11 @@ ask for hash(X)          |                 |
 establish connection<------------------------>establish connection
 ask for hash(X)------------------------------>
                <------------------------------content
+
+
+======================================================
+
+# Frontend Spec
+For all items streamed p2p via zauberflote:
+1) Set item class to be "zauberflote-item"
+2) Set item data-zauberflote attribute to item hash

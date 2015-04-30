@@ -9,7 +9,12 @@ socket.on("connect", function(){
 socket.on("peer-reply", function(data) {
   peers = data.peers;
   console.log(data.peers);
-  start();
+  if (data.peers.length > 0) {  
+    start();
+  } else {
+    var item = $("[data-zauberflote=" + data.hash + "]")[0];
+    item.src = $(item).attr("data-original");
+  }
 });
 socket.on("webrtc-data", function(data){
   signalingChannel.onmessage(data);
@@ -165,6 +170,15 @@ $(document).ready(function() {
     var hash = hashInput.val();
     socket.emit("peer-request", hash);
   });
+
+
+  // auto p2p
+  var p2pAssets = $(".zauberflote-item");
+  for (var i = 0; i < p2pAssets.length; i++) {
+    var hash = $(p2pAssets[i]).attr("data-zauberflote");
+    console.log("emitting " + hash);
+    socket.emit("peer-request",hash);
+  }
 });
 
 
