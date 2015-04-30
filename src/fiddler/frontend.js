@@ -9,11 +9,12 @@ socket.on("connect", function(){
 socket.on("peer-reply", function(data) {
   peers = data.peers;
   console.log(data.peers);
-  if (data.peers.length > 0) {  
-    start();
-  } else {
+  if (data.peers.length ==  0) {  
     var item = $("[data-zauberflote=" + data.hash + "]")[0];
     item.src = $(item).attr("data-original");
+    socket.emit("add", data.hash);
+  } else {
+    start();
   }
 });
 socket.on("webrtc-data", function(data){
@@ -124,9 +125,11 @@ function start() {
 
 function localOfferCreated(desc) {
   pc.setLocalDescription(desc, function () {
-    signalingChannel.send(peers[0], JSON.stringify({
-      'sdp': pc.localDescription,
-    }));
+    if (peers.length > 0) {
+      signalingChannel.send(peers[0], JSON.stringify({
+        'sdp': pc.localDescription,
+      }));
+    }
   }, logError);
 }
 
