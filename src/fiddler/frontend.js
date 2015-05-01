@@ -9,11 +9,12 @@ socket.on("connect", function(){
 socket.on("peer-reply", function(data) {
   peers = data.peers;
   console.log(data.peers);
+  var item = $("[data-zauberflote=" + data.hash + "]")[0];
   if (data.peers.length ==  0) {  
-    var item = $("[data-zauberflote=" + data.hash + "]")[0];
     item.src = $(item).attr("data-original");
     socket.emit("add", data.hash);
   } else {
+    item.className = item.className + " waiting";
     start();
   }
 });
@@ -156,25 +157,6 @@ var o = signalingChannel.onmessage;
 // -------------------------------------------------
 
 $(document).ready(function() {
-  var adButton = $(document.getElementById("advertise-button"));
-  var askButton = $(document.getElementById("ask-button"));
-  var contentInput = $(document.getElementById("content-input"));
-  var contentOutput = $(document.getElementById("content-output"));
-  var hashInput = $(document.getElementById("hash-input"));
-
-  adButton.on("click", function() {
-    var content = contentInput.val();
-    var hash = Sha256.hash(content);
-    socket.emit("add",hash);
-    console.log(hash);
-  });
-
-  askButton.on("click", function() {
-    var hash = hashInput.val();
-    socket.emit("peer-request", hash);
-  });
-
-
   // auto p2p
   var p2pAssets = $(".zauberflote-item");
   for (var i = 0; i < p2pAssets.length; i++) {
