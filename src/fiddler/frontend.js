@@ -159,7 +159,7 @@ function start() {
         if (assets.hasOwnProperty(hash)) {
           var item = $("[data-zauberflote=" + hash + "]")[0];
           item.src = assets[hash];
-          // item.src = window.URL.createObjectURL(atob(assets[hash]));
+          socket.emit("add",hash);
         }
       }
     }
