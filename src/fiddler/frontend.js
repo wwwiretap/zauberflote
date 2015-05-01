@@ -3,6 +3,7 @@
 // -------------------------------------------------
 var socket = io("http://localhost:5000");
 var peers = [];
+var assetData = {};
 socket.on("connect", function(){
   console.log("connected socket!");
 });
@@ -11,9 +12,7 @@ socket.on("peer-reply", function(data) {
   console.log(data.peers);
   var item = $("[data-zauberflote=" + data.hash + "]")[0];
   if (data.peers.length ==  0) {  
-    item.src = $(item).attr("data-original");
-    item.className = item.className + " received";
-    socket.emit("add", data.hash);
+    insertImage(item, data.hash);
   } else {
     item.className = item.className + " waiting";
     start();
@@ -26,6 +25,48 @@ socket.on("disconnect", function(){
   console.log("disconnected socket");
 });
 
+
+
+// -------------------------------------------------
+// FRONTEND DOC ELEMENTS
+// -------------------------------------------------
+
+$(document).ready(function() {
+  // auto p2p
+  var p2pAssets = $(".zauberflote-item");
+  for (var i = 0; i < p2pAssets.length; i++) {
+    var hash = $(p2pAssets[i]).attr("data-zauberflote");
+    console.log("emitting " + hash);
+    socket.emit("peer-request",hash);
+  }
+});
+
+function insertImage(item, hash) {
+  var src = $(item).attr("data-original");
+  var xhr = new XMLHttpRequest();
+  // note: CORS must be enabled
+  xhr.open("GET", src, true);
+  xhr.responseType = "blob";
+  xhr.onload = function(d) {
+    if (this.status == 200) {
+      var blob = this.response;
+      console.log(blob);
+      item.onload = function(e) {
+        window.URL.revokeObjectURL(item.src); // cleanup
+      };
+      item.src = window.URL.createObjectURL(blob);
+      var reader = new window.FileReader();
+      reader.readAsDataURL(blob); 
+      reader.onloadend = function() {
+        base64data = reader.result;                
+        console.log(base64data );
+        assetData[hash] = base64data;
+      }
+      socket.emit("add", hash);
+    }
+  };
+  xhr.send();
+}
 
 
 
@@ -112,8 +153,15 @@ function start() {
     ev.channel.onmessage = function(event) {
       console.log('got event in channel');
       console.log(event);
-      console.log(event.data);
       console.log(JSON.parse(event.data));
+      var assets = JSON.parse(event.data);
+      for (var hash in assets) {
+        if (assets.hasOwnProperty(hash)) {
+          var item = $("[data-zauberflote=" + hash + "]")[0];
+          item.src = assets[hash];
+          // item.src = window.URL.createObjectURL(atob(assets[hash]));
+        }
+      }
     }
   };
 
@@ -123,36 +171,8 @@ function start() {
     console.log("I got data channel message: ", data);
   };
   dataChannel.onopen = function (event) {
-    dataChannelSendAssets();
+    dataChannel.send(JSON.stringify(assetData));
   };
-}
-
-function dataChannelSendAssets() {
-  dataChannel.send("hello world");
-  var receivedAssets = $(".zauberflote-item.received");
-  for (var i = 0; i < receivedAssets.length; i++) {
-    var image = receivedAssets[i];
-    // create an empty canvas element
-    var canvas = document.createElement("canvas"),
-        canvasContext = canvas.getContext("2d");
-    image.onload = function () {
-      //Set canvas size is same as the picture
-      canvas.width = image.width;
-      canvas.height = image.height;
-      // draw image into canvas element
-      canvasContext.drawImage(image, 0, 0, image.width, image.height);
-      // get canvas contents as a data URL (returns png format by default)
-      var dataURL = canvas.toDataURL();
-      console.log(dataURL);
-      var data = {"hash": $(image).attr("data-zauberflote"),
-        
-
-      dataChannel.send({
-        "hash": $(image).attr("data-zauberflote"),
-        "data": dataURL.toString()
-      });
-    };
-  }
 }
 
 function localOfferCreated(desc) {
@@ -181,48 +201,6 @@ function logError(error) {
 }
 
 var o = signalingChannel.onmessage;
-
-
-// -------------------------------------------------
-// FRONTEND DOC ELEMENTS
-// -------------------------------------------------
-
-$(document).ready(function() {
-  // auto p2p
-  var p2pAssets = $(".zauberflote-item");
-  for (var i = 0; i < p2pAssets.length; i++) {
-    var hash = $(p2pAssets[i]).attr("data-zauberflote");
-    console.log("emitting " + hash);
-    socket.emit("peer-request",hash);
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
