@@ -12,6 +12,7 @@ socket.on("peer-reply", function(data) {
   var item = $("[data-zauberflote=" + data.hash + "]")[0];
   if (data.peers.length ==  0) {  
     item.src = $(item).attr("data-original");
+    item.className = item.className + " received";
     socket.emit("add", data.hash);
   } else {
     item.className = item.className + " waiting";
@@ -111,6 +112,8 @@ function start() {
     ev.channel.onmessage = function(event) {
       console.log('got event in channel');
       console.log(event);
+      console.log(event.data);
+      console.log(JSON.parse(event.data));
     }
   };
 
@@ -120,8 +123,36 @@ function start() {
     console.log("I got data channel message: ", data);
   };
   dataChannel.onopen = function (event) {
-    dataChannel.send("Hello World!");
+    dataChannelSendAssets();
   };
+}
+
+function dataChannelSendAssets() {
+  dataChannel.send("hello world");
+  var receivedAssets = $(".zauberflote-item.received");
+  for (var i = 0; i < receivedAssets.length; i++) {
+    var image = receivedAssets[i];
+    // create an empty canvas element
+    var canvas = document.createElement("canvas"),
+        canvasContext = canvas.getContext("2d");
+    image.onload = function () {
+      //Set canvas size is same as the picture
+      canvas.width = image.width;
+      canvas.height = image.height;
+      // draw image into canvas element
+      canvasContext.drawImage(image, 0, 0, image.width, image.height);
+      // get canvas contents as a data URL (returns png format by default)
+      var dataURL = canvas.toDataURL();
+      console.log(dataURL);
+      var data = {"hash": $(image).attr("data-zauberflote"),
+        
+
+      dataChannel.send({
+        "hash": $(image).attr("data-zauberflote"),
+        "data": dataURL.toString()
+      });
+    };
+  }
 }
 
 function localOfferCreated(desc) {
