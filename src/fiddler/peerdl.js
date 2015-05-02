@@ -286,6 +286,7 @@ function DownloadManager(tracker, connectionManager) {
         that.downloaded[hash] = msg.payload;
         var callback = that.pending[hash];
         delete that.pending[hash];
+        that.tracker.advertise(hash);
         callback(that.downloaded[hash]);
       }
     }
@@ -325,6 +326,10 @@ function xhrGet(url, callback) {
 // callback takes (ArrayBuffer, Error)
 DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
   var that = this;
+  if (this.downloaded.hasOwnProperty(hash)) {
+    callback(this.downloaded[hash]);
+    return;
+  }
   this.tracker.getInfo(hash, function(info) {
     if (info.peers.length > 0) {
       // p2p download
@@ -339,6 +344,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
         xhrGet(fallbackUrl, function(data, err) {
           if (data !== null) {
             that.downloaded[hash] = data;
+            that.tracker.advertise(hash);
           }
           callback(data, err);
         });
