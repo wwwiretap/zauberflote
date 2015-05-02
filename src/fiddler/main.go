@@ -14,14 +14,21 @@ import (
 	"math/big"
 )
 
-type PeerRequest struct {
+type InfoRequest struct {
 	Seq  int    `json:"seq"`
 	Hash string `json:"hash"`
 }
 
-type PeerReply struct {
+type PublishRequest struct {
+	Hash string `json:"hash"`
+	Size int `json:"size"`
+	AddPeer bool `json:"addPeer"`
+}
+
+type InfoReply struct {
 	Hash  string   `json:"hash"`
 	Peers []PeerId `json:"peers"`
+	Size int `json:"size"`
 }
 
 type WebRTCRequest struct {
@@ -43,13 +50,38 @@ func main() {
 
 		so.On("add", func(hash string) {
 			log.Println("add:", hash)
-			tracker.Add(id, hash)
+			ok := tracker.Add(id, hash)
+			if !ok {
+				log.Println("add error, untracked?");
+			}
 		})
 
-		so.On("webrtc-data", func(hash string) {
-			log.Println("webrtc-data:", hash)
+		so.On("publish", func(data string) {
+			// XXX for debugging only
+			// For security, there shouldn't be a way for people to
+			// publish stuff through the client socket interface.
+			// Stuff to be tracked should be added through a config
+			// file or some external authenticated interface.
+			log.Println("publish:", data)
+			var request PublishRequest
+			err := json.Unmarshal([]byte(data), &request)
+			if err != nil {
+				log.Println("unmarshalling error")
+				return
+			}
+			ok := tracker.Publish(request.Hash, request.Size)
+			if !ok {
+				log.Println("error publishing, duplicate?")
+			}
+			if request.AddPeer {
+				tracker.Add(PeerId(so.Id()), request.Hash)
+			}
+		})
+
+		so.On("webrtc-data", func(data string) {
+			log.Println("webrtc-data:", data)
 			var request WebRTCRequest
-			err := json.Unmarshal([]byte(hash), &request)
+			err := json.Unmarshal([]byte(data), &request)
 			if err != nil {
 				log.Println("ERROR AAAH")
 			}
@@ -65,14 +97,15 @@ func main() {
 
 		so.On("peer-request", func(req string) {
 			log.Println("peer-request:", req)
-			var request PeerRequest
+			var request InfoRequest
 			err := json.Unmarshal([]byte(req), &request)
 			if err != nil {
 				log.Println("error unmarshaling peer request")
 				return
 			}
 			peers := tracker.Peers(request.Hash)
-			reply := PeerReply{request.Hash, peers}
+			size := tracker.Size(request.Hash)
+			reply := InfoReply{request.Hash, peers, size}
 			channel := "peer-reply-" + strconv.Itoa(request.Seq)
 			so.Emit(channel, reply)
 		})
@@ -112,14 +145,19 @@ type Tracker interface {
 
 	GetSocket(id PeerId) (*socketio.Socket, bool)
 
-	Add(id PeerId, hash string)
+	Publish(hash string, size int) bool
+
+	Add(id PeerId, hash string) bool
 
 	Peers(hash string) []PeerId
+
+	Size(hash string) int
 }
 
 type tracker struct {
 	infos map[PeerId]*socketio.Socket
 	data  map[string]map[PeerId]Unit
+	sizes map[string]int
 	mu    sync.Mutex
 }
 
@@ -134,6 +172,7 @@ func CreateTracker() Tracker {
 	tr := &tracker{}
 	tr.infos = make(map[PeerId]*socketio.Socket)
 	tr.data = make(map[string]map[PeerId]Unit)
+	tr.sizes = make(map[string]int)
 	return tr
 }
 
@@ -157,14 +196,29 @@ func (tr *tracker) GetSocket(id PeerId) (*socketio.Socket, bool) {
 	return val, ok
 }
 
-func (tr *tracker) Add(id PeerId, hash string) {
+func (tr *tracker) Add(id PeerId, hash string) bool {
 	tr.mu.Lock()
 	defer tr.mu.Unlock()
+	if _, ok := tr.sizes[hash]; !ok {
+		return false
+	}
 	if v, ok := tr.data[hash]; ok {
 		v[id] = Unit{}
 	} else {
 		tr.data[hash] = map[PeerId]Unit{id: Unit{}}
 	}
+	return true
+}
+
+func (tr *tracker) Publish(hash string, size int) bool {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+	if _, ok := tr.sizes[hash]; ok {
+		// already published
+		return false
+	}
+	tr.sizes[hash] = size
+	return true
 }
 
 func (tr *tracker) Peers(hash string) []PeerId {
@@ -177,4 +231,10 @@ func (tr *tracker) Peers(hash string) []PeerId {
 		}
 	}
 	return peers
+}
+
+func (tr *tracker) Size(hash string) int {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+	return tr.sizes[hash]
 }

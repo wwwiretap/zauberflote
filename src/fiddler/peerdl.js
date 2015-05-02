@@ -27,19 +27,27 @@ function Tracker(socket) {
   this.counter = 0;
 }
 
-Tracker.prototype.getPeers = function(hash, callback) {
+Tracker.prototype.getInfo = function(hash, callback) {
   var seq = ++this.counter;
   var req = {seq: seq, hash: hash};
   this.socket.emit('peer-request', JSON.stringify(req));
   this.socket.once('peer-reply-' + seq, function(data) {
     if (data.hash === hash) {
-      callback(data.peers);
+      callback(data);
     }
   });
 };
 
 Tracker.prototype.advertise = function(hash) {
   this.socket.emit('add', hash);
+};
+
+Tracker.prototype.publish = function(hash, size, addPeer) {
+  if (typeof(addPeer) === 'undefined' || addPeer === null) {
+    addPeer = true;
+  }
+  var req = {hash: hash, size: size, addPeer: addPeer};
+  this.socket.emit('publish', JSON.stringify(req));
 };
 
 /**
@@ -268,7 +276,7 @@ DownloadManager.prototype.publish = function(hash, data) {
     return;
   }
   this.downloaded[hash] = data;
-  this.tracker.advertise(hash);
+  this.tracker.publish(hash, data.byteLength);
 };
 
 /**
@@ -279,14 +287,15 @@ DownloadManager.prototype.publish = function(hash, data) {
 
 var tracker = new Tracker(skt);
 var peer = [];
-tracker.getPeers('magic', function(peers) {
-  console.log(peers);
+tracker.getInfo('magic', function(info) {
+  console.log(info);
+  var peers = info.peers;
   if (peers.length > 0) {
     peer = peers[0];
   }
 });
-tracker.advertise('magic');
-tracker.getPeers('magic', function(peers) {
+tracker.publish('magic', 5);
+tracker.getInfo('magic', function(peers) {
   console.log(peers);
 });
 
