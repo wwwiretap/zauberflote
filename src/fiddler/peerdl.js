@@ -27,7 +27,7 @@ function Tracker(socket) {
   this.counter = 0;
 }
 
-Tracker.prototype.getPeersForHash = function(hash, callback) {
+Tracker.prototype.getPeers = function(hash, callback) {
   var seq = ++this.counter;
   var req = {seq: seq, hash: hash};
   this.socket.emit('peer-request', JSON.stringify(req));
@@ -38,7 +38,7 @@ Tracker.prototype.getPeersForHash = function(hash, callback) {
   });
 };
 
-Tracker.prototype.addHash = function(hash) {
+Tracker.prototype.advertise = function(hash) {
   this.socket.emit('add', hash);
 };
 
@@ -190,7 +190,7 @@ ConnectionManager.prototype.reset = function(peer) {
 ConnectionManager.prototype.send = function(peer, data) {
   this.connect(peer);
   var dataChannel = this.dataChannels[peer];
-  if (typeof dataChannel === 'undefined' ||
+  if (typeof(dataChannel) === 'undefined' ||
       dataChannel === null ||
       dataChannel.readyState === 'closing' ||
       dataChannel.readyState === 'closed') {
@@ -204,11 +204,71 @@ ConnectionManager.prototype.send = function(peer, data) {
     var old = dataChannel.onopen;
     dataChannel.onopen = function(event) {
       dataChannel.send(data);
-      if (typeof old !== 'undefined' && old !== null) {
+      if (typeof(old) !== 'undefined' && old !== null) {
         old(event);
       }
     };
   }
+};
+
+/**
+ * Download Manager
+ */
+
+function marshalBuffer(buffer) {
+  var binary = '';
+  var bytes = new Uint8Array(buffer);
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
+function unmarshalBuffer(base64) {
+  var binaryString =  window.atob(base64);
+  var len = binaryString.length;
+  var bytes = new Uint8Array(len);
+  for (var i = 0; i < len; i++)        {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function marshal(message) {
+  // message expected to be JSONable except for the payload field
+  // which this function will handle marshalling
+  if (message.hasOwnProperty('payload') &&
+      message.payload instanceof ArrayBuffer) {
+    message.payload = marshalBuffer(message.payload);
+  }
+  return JSON.stringify(message);
+}
+
+function unmarshal(data) {
+  var message = JSON.parse(data);
+  if (message.hasOwnProperty('payload')) {
+    message.payload = unmarshalBuffer(message.payload);
+  }
+  return message;
+}
+
+function DownloadManager(tracker, connectionManager) {
+  this.tracker = tracker;
+  this.connectionManager = connectionManager;
+  this.downloaded = {};
+  // handle request or response appropriately
+  this.connectionManager.onmessage = function(peer, data) {
+    // TODO
+  };
+}
+
+DownloadManager.prototype.publish = function(hash, data) {
+  if (this.downloaded.hasOwnProperty(hash)) {
+    return;
+  }
+  this.downloaded[hash] = data;
+  this.tracker.advertise(hash);
 };
 
 /**
@@ -218,11 +278,15 @@ ConnectionManager.prototype.send = function(peer, data) {
  */
 
 var tracker = new Tracker(skt);
-tracker.getPeersForHash('magic', function(peers) {
+var peer = [];
+tracker.getPeers('magic', function(peers) {
   console.log(peers);
+  if (peers.length > 0) {
+    peer = peers[0];
+  }
 });
-tracker.addHash('magic');
-tracker.getPeersForHash('magic', function(peers) {
+tracker.advertise('magic');
+tracker.getPeers('magic', function(peers) {
   console.log(peers);
 });
 
@@ -230,9 +294,16 @@ var sc = new SignalingChannel(skt);
 
 var cm = new ConnectionManager(sc);
 
-cm.onmessage = function(peer, data) {
-  console.log('recv from: ' + peer + ' data: ' + data);
-  if (data === 'ping') {
+var ab = new ArrayBuffer(4);
+var v = new Uint8Array(ab);
+v[0] = 1; v[1] = 3; v[2] = 3; v[3] = 7;
+var msg = {type: 'data', start: 1337, payload: ab};
+
+var data;
+cm.onmessage = function(peer, d) {
+  data = d;
+  console.log('recv from: ' + peer + ' data: ' + d);
+  if (d === 'ping') {
     cm.send(peer, 'pong');
   }
 };
