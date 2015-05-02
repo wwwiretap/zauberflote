@@ -262,12 +262,33 @@ function unmarshal(data) {
 }
 
 function DownloadManager(tracker, connectionManager) {
+  var that = this;
   this.tracker = tracker;
   this.connectionManager = connectionManager;
   this.downloaded = {};
+  // the following implementation detail will probably change in order to
+  // improve performance, but the DownloadManager API should stay the same
+  this.pending = {}; // map from hash to callback function
   // handle request or response appropriately
   this.connectionManager.onmessage = function(peer, data) {
-    // TODO
+    console.log('cm onmessage ' + peer + ' ' + data);
+    var msg = unmarshal(data);
+    if (msg.type === 'request') {
+      var hash = msg.hash;
+      if (that.downloaded.hasOwnProperty(hash)) {
+        var resp = {type: 'data', hash: hash, payload: that.downloaded[hash]};
+        that.connectionManager.send(peer, marshal(resp));
+      }
+    } else if (msg.type === 'data') {
+      // handle data, call callback if necessary
+      var hash = msg.hash;
+      if (that.pending.hasOwnProperty(hash)) {
+        that.downloaded[hash] = msg.payload;
+        var callback = that.pending[hash];
+        delete that.pending[hash];
+        callback(that.downloaded[hash]);
+      }
+    }
   };
 }
 
@@ -279,40 +300,85 @@ DownloadManager.prototype.publish = function(hash, data) {
   this.tracker.publish(hash, data.byteLength);
 };
 
+// callback takes (ArrayBuffer, Error)
+function xhrGet(url, callback) {
+  // CORS needs to be enabled for this to work
+  // the server needs to send the Access-Control-Allow-Origin: *
+  // header
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'arraybuffer';
+  xhr.onerror = function(e) {
+    callback(null, e);
+  };
+  xhr.onload = function(e) {
+    if (this.status == 200) {
+      var buffer = this.response;
+      callback(buffer);
+    } else {
+      callback(null, new Error('XHR returned ' + this.status));
+    }
+  };
+  xhr.send();
+}
+
+// callback takes (ArrayBuffer, Error)
+DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
+  var that = this;
+  this.tracker.getInfo(hash, function(info) {
+    if (info.peers.length > 0) {
+      // p2p download
+      // TODO chunking, parallelization, hash validation, failure handling
+      that.pending[hash] = callback;
+      var peer = info.peers[0]; // just choose one for now
+      var msg = {type: 'request', hash: hash};
+      that.connectionManager.send(peer, marshal(msg));
+    } else {
+      if (fallbackUrl !== null) {
+        // download via xhr, fallback has to allow CORS
+        xhrGet(fallbackUrl, function(data, err) {
+          if (data !== null) {
+            that.downloaded[hash] = data;
+          }
+          callback(data, err);
+        });
+      } else {
+        var err = new Error('P2P download unavailable, no fallback provided');
+        callback(null, err);
+      }
+    }
+  });
+};
+
 /**
  * Testing code
  *
  * This should be removed in a real build
  */
 
-var tracker = new Tracker(skt);
-var peer = [];
-tracker.getInfo('magic', function(info) {
-  console.log(info);
-  var peers = info.peers;
-  if (peers.length > 0) {
-    peer = peers[0];
-  }
-});
-tracker.publish('magic', 5);
-tracker.getInfo('magic', function(peers) {
-  console.log(peers);
-});
-
+var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
-
 var cm = new ConnectionManager(sc);
+var dm = new DownloadManager(tr, cm);
 
 var ab = new ArrayBuffer(4);
 var v = new Uint8Array(ab);
 v[0] = 1; v[1] = 3; v[2] = 3; v[3] = 7;
 var msg = {type: 'data', start: 1337, payload: ab};
 
-var data;
-cm.onmessage = function(peer, d) {
-  data = d;
-  console.log('recv from: ' + peer + ' data: ' + d);
-  if (d === 'ping') {
-    cm.send(peer, 'pong');
-  }
-};
+function pub() {
+  dm.publish('test', ab);
+}
+
+function get() {
+  dm.download('test', null, function(data, err) {
+    if (err) {
+      console.log('error');
+      console.log(err);
+    } else {
+      console.log('got data!');
+      var v = new Uint8Array(data);
+      console.log(v);
+    }
+  });
+}
