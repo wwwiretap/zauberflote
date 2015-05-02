@@ -271,7 +271,6 @@ function DownloadManager(tracker, connectionManager) {
   this.pending = {}; // map from hash to callback function
   // handle request or response appropriately
   this.connectionManager.onmessage = function(peer, data) {
-    console.log('cm onmessage ' + peer + ' ' + data);
     var msg = unmarshal(data);
     if (msg.type === 'request') {
       var hash = msg.hash;
