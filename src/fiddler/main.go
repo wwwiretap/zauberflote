@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	. "types"
 
@@ -13,13 +14,18 @@ import (
 	"math/big"
 )
 
+type PeerRequest struct {
+	Seq  int    `json:"seq"`
+	Hash string `json:"hash"`
+}
+
 type PeerReply struct {
 	Hash  string   `json:"hash"`
 	Peers []PeerId `json:"peers"`
 }
 
 type WebRTCRequest struct {
-	Peer PeerId `json:"peer_id"`
+	Peer PeerId `json:"peer"`
 	Data string `json:"data"`
 }
 
@@ -48,16 +54,27 @@ func main() {
 				log.Println("ERROR AAAH")
 			}
 			webRTCdat := &WebRTCRequest{Data: request.Data, Peer: id}
-			peerSocket := tracker.GetSocket(request.Peer)
+			peerSocket, ok := tracker.GetSocket(request.Peer)
+			if !ok {
+				log.Println("invalid target", request.Peer)
+				return
+			}
 			log.Println("sending to peer for webrtc: ", webRTCdat)
 			(*peerSocket).Emit("webrtc-data", webRTCdat)
 		})
 
-		so.On("peer-request", func(hash string) {
-			log.Println("peer-request:", hash)
-			peers := tracker.Peers(hash)
-			reply := PeerReply{hash, peers}
-			so.Emit("peer-reply", reply)
+		so.On("peer-request", func(req string) {
+			log.Println("peer-request:", req)
+			var request PeerRequest
+			err := json.Unmarshal([]byte(req), &request)
+			if err != nil {
+				log.Println("error unmarshaling peer request")
+				return
+			}
+			peers := tracker.Peers(request.Hash)
+			reply := PeerReply{request.Hash, peers}
+			channel := "peer-reply-" + strconv.Itoa(request.Seq)
+			so.Emit(channel, reply)
 		})
 
 		so.On("disconnection", func() {
@@ -93,7 +110,7 @@ type Tracker interface {
 
 	Disconnect(id PeerId)
 
-	GetSocket(id PeerId) *socketio.Socket
+	GetSocket(id PeerId) (*socketio.Socket, bool)
 
 	Add(id PeerId, hash string)
 
@@ -135,8 +152,9 @@ func (tr *tracker) Disconnect(id PeerId) {
 	}
 }
 
-func (tr *tracker) GetSocket(id PeerId) *socketio.Socket {
-	return tr.infos[id]
+func (tr *tracker) GetSocket(id PeerId) (*socketio.Socket, bool) {
+	val, ok := tr.infos[id]
+	return val, ok
 }
 
 func (tr *tracker) Add(id PeerId, hash string) {
