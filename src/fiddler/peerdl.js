@@ -286,7 +286,6 @@ Download.prototype.start = function() {
   var that = this;
   var check = function() {
     var done = true; // will be set to false if any chunk not downloaded
-    // once every 100x loops, refresh tracker peer info
     loopCount = loopCount + 1;
     if (loopCount % trackerCheckSkip == 0) {
       loopCount = 0;
