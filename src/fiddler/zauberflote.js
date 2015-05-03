@@ -13,14 +13,13 @@ var dm = new DownloadManager(tr, cm);
  */
 
 $(document).ready(function() {
-  var p2pAssets = $('[data-zf-hash]');
+  // XXX this is only implemented for images
+  var p2pAssets = $('img[data-zf-hash]');
   for (var i = 0; i < p2pAssets.length; i++) {
     var item = p2pAssets[i];
     var hash = $(item).attr('data-zf-hash');
     var fallback = $(item).attr('data-zf-fallback');
     dm.download(hash, fallback, function(data, err) {
-      // XXX this only works for images
-
       // perhaps we should store the content type in the tracker as well,
       // instead of just setting it to 'application/octet-stream' and letting
       // the browser deal with it
