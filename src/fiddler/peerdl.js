@@ -44,7 +44,7 @@ Tracker.prototype.advertise = function(hash) {
 
 Tracker.prototype.publish = function(hash, size, addPeer) {
   if (typeof(addPeer) === 'undefined' || addPeer === null) {
-    addPeer = true;
+    addPeer = false;
   }
   var req = {hash: hash, size: size, addPeer: addPeer};
   this.socket.emit('publish', JSON.stringify(req));
