@@ -262,11 +262,12 @@ function unmarshal(data) {
 }
 
 // Download object -- data representation of file chunks
-function Download(downloadManager, peers, size, hash, callback) {
+function Download(downloadManager, peers, size, hash, fallbackUrl, callback) {
   this.downloadManager = downloadManager;
   this.peers = peers;
   this.downloadSize = size;
   this.hash = hash;
+  this.fallbackUrl = fallbackUrl;
   this.done = callback;
 
   // instantiate chunk array
@@ -278,7 +279,8 @@ function Download(downloadManager, peers, size, hash, callback) {
 
 // Start the download
 Download.prototype.start = function() {
-  var loopTickDuration = 30; // in ms
+  var loopTickDuration = 25; // in ms
+  var trackerCheckSkip = 10;
   var loopCount = 0;
 
   var that = this;
@@ -286,10 +288,16 @@ Download.prototype.start = function() {
     var done = true; // will be set to false if any chunk not downloaded
     // once every 100x loops, refresh tracker peer info
     loopCount = loopCount + 1;
-    if (loopCount % 100 == 0) {
-      that.tracker.getInfo(hash, function(info) {
-        that.peers = info.peers;
+    if (loopCount % trackerCheckSkip == 0) {
+      loopCount = 0;
+      that.downloadManager.tracker.getInfo(that.hash, function(info) {
+        that.peers = info.peers || [];
       });
+    }
+    // fall back to HTTP?
+    if (that.peers.length == 0) {
+      that.abort();
+      return;
     }
     // loop through chunks
     for(var i = 0; i < that.chunks.length; i++) {
@@ -349,15 +357,28 @@ Download.prototype.finish = function() {
     var view = new Uint8Array(content, chunkStart, currChunkSize);
     view.set(new Uint8Array(this.chunks[i].data));
   }
-  this.downloadManager.finishDownload(this.hash, content, this.done);
+  this.downloadManager.finishDownload(this.hash, content, null, this.done);
 }
+
+Download.prototype.abort = function() {
+  trace('aborted ' + this.hash);
+  var that = this;
+  if (this.fallbackUrl !== null) {
+    xhrGet(this.fallbackUrl, function(data, err) {
+      that.downloadManager.finishDownload(that.hash, data, err, that.done);
+    });
+  } else {
+    var err = new Error('P2P download unavailable, no fallback provided');
+    that.downloadManager.finishDownload(that.hash, null, err, that.done);
+  }
+};
 
 function DownloadManager(tracker, connectionManager) {
   var that = this;
   this.tracker = tracker;
   this.connectionManager = connectionManager;
   this.downloaded = {};
-  this.chunkSize = 1000; // 1KB chunk size
+  this.chunkSize = 1024; // 1KB chunk size
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
   this.pending = {}; // map from hash to Downloads
@@ -384,11 +405,15 @@ function DownloadManager(tracker, connectionManager) {
   };
 }
 
-DownloadManager.prototype.finishDownload = function(hash, content, callback) {
-  this.downloaded[hash] = content;
-  delete this.pending[hash];
-  this.tracker.advertise(hash);
-  callback(this.downloaded[hash]);
+DownloadManager.prototype.finishDownload = function(hash, content, error, callback) {
+  if (typeof(error) === 'undefined' || error === null) {
+    this.downloaded[hash] = content;
+    delete this.pending[hash];
+    this.tracker.advertise(hash);
+    callback(this.downloaded[hash]);
+  } else {
+    callback(null, error);
+  }
 }
 
 DownloadManager.prototype.publish = function(hash, data, addPeer) {
@@ -413,7 +438,7 @@ function xhrGet(url, callback) {
   xhr.onload = function(e) {
     if (this.status == 200) {
       var buffer = this.response;
-      callback(buffer);
+      callback(buffer, null);
     } else {
       callback(null, new Error('XHR returned ' + this.status));
     }
@@ -427,6 +452,9 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
   if (this.downloaded.hasOwnProperty(hash)) {
     callback(this.downloaded[hash]);
     return;
+  } else if (this.pending.hasOwnProperty(hash)) {
+    // in progress, quit
+    return;
   }
   this.tracker.getInfo(hash, function(info) {
     if (info.peers.length > 0) {
@@ -438,7 +466,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       // var peer = info.peers[0]; // just choose one for now
       // var msg = {type: 'request', hash: hash};
       // that.connectionManager.send(peer, marshal(msg));
-      var download = new Download(that, info.peers, info.size, hash, callback);
+      var download = new Download(that, info.peers, info.size, hash, fallbackUrl, callback);
       that.pending[hash] = download;
       download.start();
     } else {
