@@ -1,0 +1,44 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+
+\usepackage{style, verbatim, url}
+\usepackage[colorlinks=true, citecolor=blue]{hyperref}
+\usepackage{cleveref}
+\usepackage{breakurl}
+
+\makeatletter
+\newcommand{\crefnames}[3]{
+    \@for\next:=#1\do{
+        \expandafter\crefname\expandafter{\next}{#2}{#3}
+    }
+}
+\makeatother
+\crefnames{part,chapter,section}{\S}{\S\S}
+
+
+\begin{document}
+
+\title{\Large \bf Zauberfl\"{o}te: A Transparent Peer-to-Peer CDN}
+
+\author{
+    {\rm Anish Athalye}\\
+    aathalye@mit.edu
+    \and
+    {\rm Ankush Gupta}\\
+    ankush@mit.edu
+    \and
+    {\rm Katie Siegel}\\
+    ksiegel@mit.edu
+}
+
+\maketitle
+
+\thispagestyle{empty}
+
+\begin{abstract}
+    % TODO
+\end{abstract}
+
+{\footnotesize \bibliographystyle{ieeetr}
+\bibliography{paper}}
+
+\end{document}
