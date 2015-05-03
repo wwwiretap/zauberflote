@@ -13,7 +13,7 @@ var dm = new DownloadManager(tr, cm);
  */
 
 $(document).ready(function() {
-  var p2pAssets = $('.zf-item');
+  var p2pAssets = $('[data-zf-hash]');
   for (var i = 0; i < p2pAssets.length; i++) {
     var item = p2pAssets[i];
     var hash = $(item).attr('data-zf-hash');

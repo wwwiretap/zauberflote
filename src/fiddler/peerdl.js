@@ -4,11 +4,17 @@
  * Utilities
  */
 
-var DEBUG = false;
+var DEBUG = true;
 
 function logError(error) {
   if (DEBUG) {
     console.log('error: ' + error);
+  }
+}
+
+function trace(msg) {
+  if (DEBUG) {
+    console.log(msg);
   }
 }
 
@@ -325,7 +331,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
   }
   this.tracker.getInfo(hash, function(info) {
     if (info.peers.length > 0) {
-      console.log('downloading over p2p: ' + hash);
+      trace('downloading over p2p: ' + hash);
       // p2p download
       // TODO chunking, parallelization, hash validation, failure handling
       that.pending[hash] = callback;
@@ -333,7 +339,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       var msg = {type: 'request', hash: hash};
       that.connectionManager.send(peer, marshal(msg));
     } else {
-      console.log('downloading over xhr: ' + hash);
+      trace('downloading over xhr: ' + hash);
       if (fallbackUrl !== null) {
         // download via xhr, fallback has to allow CORS
         xhrGet(fallbackUrl, function(data, err) {
