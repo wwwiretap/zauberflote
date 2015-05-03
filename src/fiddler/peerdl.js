@@ -277,7 +277,7 @@ function DownloadObject(downloadManager, peers, size, hash, callback) {
 }
 
 // Start the download
-DownloadObject.prototype.get() {
+DownloadObject.prototype.get = function() {
   var done = false;
   var loopCount = 0;
   while (!done) {
@@ -287,7 +287,7 @@ DownloadObject.prototype.get() {
     if (loopCount % 100 == 0) {
       this.tracker.getInfo(hash, function(info) {
         this.peers = info.peers;
-      }
+      });
     }
     // loop through chunks
     for(var i = 0; i < this.chunks.length; i++) {
@@ -312,7 +312,7 @@ DownloadObject.prototype.get() {
   this.finish();
 }
 
-DownloadObject.prototype.timedOut(lastSent, numTries) {
+DownloadObject.prototype.timedOut = function(lastSent, numTries) {
   var timeoutCutoff = 100; // 100 ms
   var now = new Date();
   if (lastSent == null || now.getTime() - lastSent > timeoutCutoff) {
@@ -321,23 +321,23 @@ DownloadObject.prototype.timedOut(lastSent, numTries) {
   return false;
 }
 
-DownloadObject.prototype.choosePeer() {
+DownloadObject.prototype.choosePeer = function() {
   return this.peers[Math.floor(Math.random() * this.peers.length)];
 }
 
 // Chunk of download obj received
-DownloadObject.prototype.received(seq, payload) {
+DownloadObject.prototype.received = function(seq, payload) {
   this.chunks[seq].data = payload;
 }
 
-DownloadObject.prototype.finish() {
+DownloadObject.prototype.finish = function() {
   var content = new ArrayBuffer(this.downloadSize);
   for (var i = 0; i < this.chunks.length; i++) {
     var chunkSize = this.downloadManager.chunkSize;
     var view = new Uint8Array(content, i * chunkSize, chunkSize);
     view.set(new Uint8Array(this.chunks[i].data));
   }
-  this.downloadManager.finishDownload(this.hash, content, this.callback);
+  this.downloadManager.finishDownload(this.hash, content, this.done);
 }
 
 function DownloadManager(tracker, connectionManager) {
@@ -424,7 +424,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       // var peer = info.peers[0]; // just choose one for now
       // var msg = {type: 'request', hash: hash};
       // that.connectionManager.send(peer, marshal(msg));
-      var download = new Download(this, info.peers, info.size, hash, callback);
+      var download = new DownloadObject(that, info.peers, info.size, hash, callback);
       that.pending[hash] = download;
       download.get();
     } else {
