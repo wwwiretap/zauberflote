@@ -452,19 +452,13 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
     callback(this.downloaded[hash]);
     return;
   } else if (this.pending.hasOwnProperty(hash)) {
-    // in progress, quit
+    // in progress, no need to do anything
     return;
   }
   this.tracker.getInfo(hash, function(info) {
     if (info.peers.length > 0) {
       trace('downloading over p2p: ' + hash);
-      // p2p download
-      // TODO chunking, parallelization, hash validation, failure handling
-      // XXX remove
-      // that.pending[hash] = callback;
-      // var peer = info.peers[0]; // just choose one for now
-      // var msg = {type: 'request', hash: hash};
-      // that.connectionManager.send(peer, marshal(msg));
+      // TODO hash validation
       var download = new Download(that, info.peers, info.size, hash, fallbackUrl, callback);
       that.pending[hash] = download;
       download.start();
