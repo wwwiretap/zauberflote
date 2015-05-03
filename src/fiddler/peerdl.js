@@ -268,12 +268,10 @@ function DownloadObject(downloadManager, peers, size, hash, callback) {
   this.downloadSize = size;
   this.hash = hash;
   this.done = callback;
-  this.chunkSize = 1000; // 1KB chunks
-  
 
   // instantiate chunk array
   this.chunks = [];
-  for (var i = 0; i < this.downloadSize; i += this.chunkSize) {
+  for (var i = 0; i < this.downloadSize; i += this.downloadManager.chunkSize) {
     this.chunks.push({peer: null, lastSent: null, numTries: 0, data: null});
   }
 }
@@ -315,6 +313,7 @@ DownloadObject.prototype.get() {
 }
 
 DownloadObject.prototype.timedOut(lastSent, numTries) {
+  var timeoutCutoff = 100; // 100 ms
   var now = new Date();
   if (lastSent == null || now.getTime() - lastSent > timeoutCutoff) {
     return true;
@@ -327,14 +326,16 @@ DownloadObject.prototype.choosePeer() {
 }
 
 // Chunk of download obj received
-DownloadObject.prototype.received(payload) {
-  this.chunks[payload.seq].data = msg.payload;
+DownloadObject.prototype.received(seq, payload) {
+  this.chunks[seq].data = payload;
 }
 
 DownloadObject.prototype.finish() {
-  var content = "";
+  var content = new ArrayBuffer(this.downloadSize);
   for (var i = 0; i < this.chunks.length; i++) {
-    content += this.chunks[i].data;
+    var chunkSize = this.downloadManager.chunkSize;
+    var view = new Uint8Array(content, i * chunkSize, chunkSize);
+    view.set(new Uint8Array(this.chunks[i].data));
   }
   this.downloadManager.finishDownload(this.hash, content, this.callback);
 }
@@ -344,6 +345,7 @@ function DownloadManager(tracker, connectionManager) {
   this.tracker = tracker;
   this.connectionManager = connectionManager;
   this.downloaded = {};
+  this.chunkSize = 1000; // 1KB chunk size
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
   this.pending = {}; // map from hash to DownloadObjects
@@ -353,7 +355,8 @@ function DownloadManager(tracker, connectionManager) {
     if (msg.type === 'request') {
       var hash = msg.hash;
       if (that.downloaded.hasOwnProperty(hash)) {
-        var resp = {type: 'data', hash: hash, payload: that.downloaded[hash]};
+        var chunkData = that.downloaded[hash].slice(msg.seq * chunkSize, (msg.seq + 1) * chunkSize);
+        var resp = {type: 'data', hash: hash, payload: chunkData, seq: msg.seq};
         that.connectionManager.send(peer, marshal(resp));
       }
     } else if (msg.type === 'data') {
@@ -361,7 +364,7 @@ function DownloadManager(tracker, connectionManager) {
       var hash = msg.hash;
       if (that.pending.hasOwnProperty(hash)) {
         var downloadObject = that.pending[hash];
-        downloadObject.received(msg.payload);
+        downloadObject.received(msg.seq, msg.payload);
       }
     }
   };
