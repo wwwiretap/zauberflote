@@ -294,7 +294,7 @@ Download.prototype.start = function() {
     // loop through chunks
     for(var i = 0; i < that.chunks.length; i++) {
       var chunk = that.chunks[i];
-      console.log("chunk: " + chunk.toString);
+      // console.log(chunk);
       // chunk.lastSent is in milliseconds
       if (chunk.data == null) {
         if (that.timedOut(chunk.lastSent, chunk.numTries)) {
@@ -368,7 +368,12 @@ function DownloadManager(tracker, connectionManager) {
     if (msg.type === 'request') {
       var hash = msg.hash;
       if (that.downloaded.hasOwnProperty(hash)) {
-        var chunkData = that.downloaded[hash].slice(msg.seq * chunkSize, (msg.seq + 1) * chunkSize);
+        var chunkStart = msg.seq * that.chunkSize;
+        var currChunkSize = Math.min(chunkStart + that.chunkSize, that.downloaded[hash].byteLength) - chunkStart;
+        console.log(that.downloaded[hash]);
+        var chunkData = that.downloaded[hash].slice(chunkStart, currChunkSize);
+        console.log("sending data");
+        console.log(new Uint8Array(chunkData));
         var resp = {type: 'data', hash: hash, payload: chunkData, seq: msg.seq};
         that.connectionManager.send(peer, marshal(resp));
       }
@@ -447,6 +452,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
         xhrGet(fallbackUrl, function(data, err) {
           if (data !== null) {
             that.downloaded[hash] = data;
+            console.log(new Uint8Array(data));
             that.tracker.advertise(hash);
           }
           callback(data, err);
