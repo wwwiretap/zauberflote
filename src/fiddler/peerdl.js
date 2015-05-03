@@ -13,12 +13,6 @@ function logError(error) {
 }
 
 /**
- * Socket
- */
-
-var skt = io("http://localhost:5000");
-
-/**
  * Tracker Interface
  */
 
@@ -361,6 +355,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
  * This should be removed in a real build
  */
 
+var skt = io("http://localhost:5000");
 var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
 var cm = new ConnectionManager(sc);
