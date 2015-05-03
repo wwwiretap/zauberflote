@@ -2,34 +2,33 @@
  * Setup
  */
 
-var skt = io("http://localhost:5000");
+var skt = io('http://localhost:5000');
 var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
 var cm = new ConnectionManager(sc);
 var dm = new DownloadManager(tr, cm);
 
 /**
- * Testing code
+ * Automatic p2p download
  */
 
-var ab = new ArrayBuffer(4);
-var v = new Uint8Array(ab);
-v[0] = 1; v[1] = 3; v[2] = 3; v[3] = 7;
-var msg = {type: 'data', start: 1337, payload: ab};
+$(document).ready(function() {
+  var p2pAssets = $('.zf-item');
+  for (var i = 0; i < p2pAssets.length; i++) {
+    var item = p2pAssets[i];
+    var hash = $(item).attr('data-zf-hash');
+    var fallback = $(item).attr('data-zf-fallback');
+    dm.download(hash, fallback, function(data, err) {
+      // XXX this only works for images
 
-function pub() {
-  dm.publish('test', ab);
-}
-
-function get() {
-  dm.download('test', null, function(data, err) {
-    if (err) {
-      console.log('error');
-      console.log(err);
-    } else {
-      console.log('got data!');
-      var v = new Uint8Array(data);
-      console.log(v);
-    }
-  });
-}
+      // perhaps we should store the content type in the tracker as well,
+      // instead of just setting it to 'application/octet-stream' and letting
+      // the browser deal with it
+      var blob = new Blob([data], {type: 'application/octet-stream'});
+      item.onload = function(e) {
+        window.URL.revokeObjectURL(item.src); // cleanup
+      };
+      item.src = window.URL.createObjectURL(blob);
+    });
+  }
+});

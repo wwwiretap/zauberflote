@@ -286,12 +286,12 @@ function DownloadManager(tracker, connectionManager) {
   };
 }
 
-DownloadManager.prototype.publish = function(hash, data) {
+DownloadManager.prototype.publish = function(hash, data, addPeer) {
   if (this.downloaded.hasOwnProperty(hash)) {
     return;
   }
   this.downloaded[hash] = data;
-  this.tracker.publish(hash, data.byteLength);
+  this.tracker.publish(hash, data.byteLength, addPeer);
 };
 
 // callback takes (ArrayBuffer, Error)
@@ -325,6 +325,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
   }
   this.tracker.getInfo(hash, function(info) {
     if (info.peers.length > 0) {
+      console.log('downloading over p2p: ' + hash);
       // p2p download
       // TODO chunking, parallelization, hash validation, failure handling
       that.pending[hash] = callback;
@@ -332,6 +333,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       var msg = {type: 'request', hash: hash};
       that.connectionManager.send(peer, marshal(msg));
     } else {
+      console.log('downloading over xhr: ' + hash);
       if (fallbackUrl !== null) {
         // download via xhr, fallback has to allow CORS
         xhrGet(fallbackUrl, function(data, err) {
