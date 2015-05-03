@@ -262,34 +262,74 @@ function unmarshal(data) {
 }
 
 // Download object -- data representation of file chunks
-function DownloadObject(hash, callback) {
-  // that.pending[hash] = callback;
-  // var peer = info.peers[0]; // just choose one for now
-  // var msg = {type: 'request', hash: hash};
-  // that.connectionManager.send(peer, marshal(msg));
+function DownloadObject(connectionManager, peers, size, hash, callback) {
+  this.connectionManager = connectionManager;
+  this.peers = peers;
+  this.downloadSize = size;
+  this.hash = hash;
+  this.done = callback;
+  this.chunkSize = 1000; // 1KB chunks
   
-  // chunk download
-  
-  
+
+  // instantiate chunk array
+  this.chunks = [];
+  for (var i = 0; i < this.downloadSize; i += this.chunkSize) {
+    this.chunks.push({seq: i, peer: null, lastSent: null, numTries: 0, data: null});
+  }
 }
 
 // Start the download
 DownloadObject.prototype.get() {
   var done = false;
+  var loopCount = 0;
   while (!done) {
     done = true;
+    // once every 20x loops, refresh tracker peer info
+    loopCount = loopCount + 1;
+    if (loopCount % 20 == 0) {
+      // TODO(refresh)
+    }
     // loop through chunks
     for(chunk in this.chunks) {
-      // once every 20x loops, refresh tracker peer info
-      // check if timeout reached
-      // increment number times asked
-      // ask random other peer for chunk
+      // chunk.lastSent is in milliseconds
+      if (this.timedOut(chunk.lastSent, chunk.numTries)) {
+        var peer = this.choosePeer();
+        var msg = {type: 'request', hash: this.hash, chunkSeq: chunk.seq};
+        this.connectionManager.send(peer, marshal(msg));
+        // update chunk data
+        chunk.peer = peer;
+        var now = new Date();
+        chunk.lastSent = now.getTime();
+        chunk.numTries = chunk.numTries + 1;
+      }
     }
   }
+  this.finish();
+}
+
+DownloadObject.prototype.timedOut(lastSent, numTries) {
+  var now = new Date();
+  if (lastSent == null || now.getTime() - lastSent > timeoutCutoff) {
+    return true;
+  }
+  return false;
+}
+
+DownloadObject.prototype.choosePeer() {
+  return this.peers[Math.floor(Math.random() * this.peers.length)];
 }
 
 // Chunk of download obj received
-DownloadObject.prototype.receive(payload) {
+DownloadObject.prototype.received(payload) {
+  // that.downloaded[hash] = msg.payload;
+  var downloadObject = that.pending[hash];
+}
+
+DownloadObject.prototype.finish() {
+  // TODO(callback, delete advertise)
+  // delete that.pending[hash];
+  // that.tracker.advertise(hash);
+  // callback(that.downloaded[hash]);
 }
 
 function DownloadManager(tracker, connectionManager) {
@@ -318,7 +358,7 @@ function DownloadManager(tracker, connectionManager) {
         var downloadObject = that.pending[hash];
         // TODO implement finished downloading object code--delete, advertise, callback
         // delete that.pending[hash];
-        downloadObject.receive(msg.payload);
+        downloadObject.received(msg.payload);
         // that.tracker.advertise(hash);
         // callback(that.downloaded[hash]);
       }
@@ -373,7 +413,7 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       // var peer = info.peers[0]; // just choose one for now
       // var msg = {type: 'request', hash: hash};
       // that.connectionManager.send(peer, marshal(msg));
-      var download = new Download(hash, callback);
+      var download = new Download(this.connectionManager, info.peers, info.size, hash, callback);
       that.pending[hash] = download;
       download.get();
     } else {
