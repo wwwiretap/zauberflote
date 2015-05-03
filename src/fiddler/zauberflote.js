@@ -1,3 +1,4 @@
+"use strict";
 /**
  * Setup
  */
@@ -13,21 +14,41 @@ var dm = new DownloadManager(tr, cm);
  */
 
 $(document).ready(function() {
-  // XXX this is only implemented for images
-  var p2pAssets = $('img[data-zf-hash]');
+  var p2pAssets = $('[data-zf-hash]');
   for (var i = 0; i < p2pAssets.length; i++) {
     var item = p2pAssets[i];
     var hash = $(item).attr('data-zf-hash');
     var fallback = $(item).attr('data-zf-fallback');
-    dm.download(hash, fallback, function(data, err) {
-      // perhaps we should store the content type in the tracker as well,
-      // instead of just setting it to 'application/octet-stream' and letting
-      // the browser deal with it
-      var blob = new Blob([data], {type: 'application/octet-stream'});
-      item.onload = function(e) {
-        window.URL.revokeObjectURL(item.src); // cleanup
-      };
-      item.src = window.URL.createObjectURL(blob);
-    });
+    var derp = 0;
+    (function(item) {
+      dm.download(hash, fallback, function(data, err) {
+        // perhaps we should store the content type in the tracker as well,
+        // instead of just setting it to 'application/octet-stream' and letting
+        // the browser deal with it
+        var blob;
+
+        switch(item.tagName) {
+          case 'IMG': // we could just delete this and use the default handler
+            console.log("downloading img");
+            blob = new Blob([data], {type: 'application/octet-stream'});
+            item.src = window.URL.createObjectURL(blob);
+            break;
+          case 'SCRIPT':
+            console.log("downloading script");
+            blob = new Blob([data], {type: 'text/javascript'});
+            item.src = window.URL.createObjectURL(blob);
+            break;
+          case 'LINK':
+            console.log("downloading css");
+            blob = new Blob([data], {type: 'text/css'});
+            item.rel = "stylesheet";
+            item.href = window.URL.createObjectURL(blob);
+            break;
+          default:
+            blob = new Blob([data], {type: 'application/octet-stream'});
+            item.src = window.URL.createObjectURL(blob);
+        }
+      });
+    }(item));
   }
 });
