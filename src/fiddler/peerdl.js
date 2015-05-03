@@ -292,11 +292,11 @@ DownloadObject.prototype.get = function() {
     // loop through chunks
     for(var i = 0; i < this.chunks.length; i++) {
       var chunk = this.chunks[i];
+      console.log("chunk: " + chunk.toString);
       // chunk.lastSent is in milliseconds
       if (chunk.data == null) {
         if (this.timedOut(chunk.lastSent, chunk.numTries)) {
           var peer = this.choosePeer();
-          // TODO(add chunk seq to protocol)
           var msg = {type: 'request', hash: this.hash, seq: i};
           this.downloadManager.connectionManager.send(peer, marshal(msg));
           // update chunk data
@@ -334,7 +334,9 @@ DownloadObject.prototype.finish = function() {
   var content = new ArrayBuffer(this.downloadSize);
   for (var i = 0; i < this.chunks.length; i++) {
     var chunkSize = this.downloadManager.chunkSize;
-    var view = new Uint8Array(content, i * chunkSize, chunkSize);
+    var chunkStart = i * chunkSize;
+    var currChunkSize = Math.min(chunkStart + chunkSize, this.downloadSize) - chunkStart;
+    var view = new Uint8Array(content, chunkStart, currChunkSize);
     view.set(new Uint8Array(this.chunks[i].data));
   }
   this.downloadManager.finishDownload(this.hash, content, this.done);

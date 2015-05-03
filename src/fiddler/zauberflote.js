@@ -19,10 +19,8 @@ $(document).ready(function() {
     var item = p2pAssets[i];
     var hash = $(item).attr('data-zf-hash');
     var fallback = $(item).attr('data-zf-fallback');
-    var derp = 0;
     (function(item) {
       dm.download(hash, fallback, function(data, err) {
-        console.log(new Uint8Array(data));
         // perhaps we should store the content type in the tracker as well,
         // instead of just setting it to 'application/octet-stream' and letting
         // the browser deal with it
