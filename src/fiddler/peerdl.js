@@ -261,6 +261,37 @@ function unmarshal(data) {
   return message;
 }
 
+// Download object -- data representation of file chunks
+function DownloadObject(hash, callback) {
+  // that.pending[hash] = callback;
+  // var peer = info.peers[0]; // just choose one for now
+  // var msg = {type: 'request', hash: hash};
+  // that.connectionManager.send(peer, marshal(msg));
+  
+  // chunk download
+  
+  
+}
+
+// Start the download
+DownloadObject.prototype.get() {
+  var done = false;
+  while (!done) {
+    done = true;
+    // loop through chunks
+    for(chunk in this.chunks) {
+      // once every 20x loops, refresh tracker peer info
+      // check if timeout reached
+      // increment number times asked
+      // ask random other peer for chunk
+    }
+  }
+}
+
+// Chunk of download obj received
+DownloadObject.prototype.receive(payload) {
+}
+
 function DownloadManager(tracker, connectionManager) {
   var that = this;
   this.tracker = tracker;
@@ -268,7 +299,7 @@ function DownloadManager(tracker, connectionManager) {
   this.downloaded = {};
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
-  this.pending = {}; // map from hash to callback function
+  this.pending = {}; // map from hash to DownloadObjects
   // handle request or response appropriately
   this.connectionManager.onmessage = function(peer, data) {
     var msg = unmarshal(data);
@@ -282,11 +313,14 @@ function DownloadManager(tracker, connectionManager) {
       // handle data, call callback if necessary
       var hash = msg.hash;
       if (that.pending.hasOwnProperty(hash)) {
-        that.downloaded[hash] = msg.payload;
-        var callback = that.pending[hash];
-        delete that.pending[hash];
-        that.tracker.advertise(hash);
-        callback(that.downloaded[hash]);
+        // XXX delete
+        // that.downloaded[hash] = msg.payload;
+        var downloadObject = that.pending[hash];
+        // TODO implement finished downloading object code--delete, advertise, callback
+        // delete that.pending[hash];
+        downloadObject.receive(msg.payload);
+        // that.tracker.advertise(hash);
+        // callback(that.downloaded[hash]);
       }
     }
   };
@@ -334,10 +368,14 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
       trace('downloading over p2p: ' + hash);
       // p2p download
       // TODO chunking, parallelization, hash validation, failure handling
-      that.pending[hash] = callback;
-      var peer = info.peers[0]; // just choose one for now
-      var msg = {type: 'request', hash: hash};
-      that.connectionManager.send(peer, marshal(msg));
+      // XXX remove
+      // that.pending[hash] = callback;
+      // var peer = info.peers[0]; // just choose one for now
+      // var msg = {type: 'request', hash: hash};
+      // that.connectionManager.send(peer, marshal(msg));
+      var download = new Download(hash, callback);
+      that.pending[hash] = download;
+      download.get();
     } else {
       trace('downloading over xhr: ' + hash);
       if (fallbackUrl !== null) {
