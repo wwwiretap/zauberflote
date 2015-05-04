@@ -210,12 +210,17 @@ ConnectionManager.prototype.send = function(peer, data) {
   } else if (dataChannel.readyState === 'connecting') {
     // queue data
     var old = dataChannel.onopen;
-    dataChannel.onopen = function(event) {
-      dataChannel.send(data);
-      if (typeof(old) !== 'undefined' && old !== null) {
-        old(event);
-      }
-    };
+    if (typeof(old) !== 'undefined' && old !== null) {
+      old.queued.push(data);
+    } else {
+      var f = {queued: [data]};
+      f.call = function(event) {
+        for (var i = 0; i < this.queued.length; i++) {
+          dataChannel.send(this.queued[i]);
+        }
+      };
+      dataChannel.onopen = f;
+    }
   }
 };
 
@@ -385,7 +390,7 @@ function DownloadManager(tracker, connectionManager, hashfn) {
   this.connectionManager = connectionManager;
   this.hashfn = hashfn;
   this.downloaded = {};
-  this.chunkSize = 25*1024; // chunk size in bytes
+  this.chunkSize = 10 * 1024; // chunk size in bytes
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
   this.pending = {}; // map from hash to Downloads
