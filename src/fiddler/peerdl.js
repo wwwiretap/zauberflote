@@ -356,7 +356,14 @@ Download.prototype.finish = function() {
     var view = new Uint8Array(content, chunkStart, currChunkSize);
     view.set(new Uint8Array(this.chunks[i].data));
   }
-  this.downloadManager.finishDownload(this.hash, content, null, this.done);
+  // validate hash
+  if (this.downloadManager.hashfn(content) !== this.hash) {
+    trace('hash mismatch for ' + this.hash + ', falling back');
+    this.abort();
+  } else {
+    trace('hash ok for ' + this.hash);
+    this.downloadManager.finishDownload(this.hash, content, null, this.done);
+  }
 }
 
 Download.prototype.abort = function() {
@@ -372,10 +379,11 @@ Download.prototype.abort = function() {
   }
 };
 
-function DownloadManager(tracker, connectionManager) {
+function DownloadManager(tracker, connectionManager, hashfn) {
   var that = this;
   this.tracker = tracker;
   this.connectionManager = connectionManager;
+  this.hashfn = hashfn;
   this.downloaded = {};
   this.chunkSize = 1024; // 1KB chunk size
   // the following implementation detail will probably change in order to
@@ -456,27 +464,8 @@ DownloadManager.prototype.download = function(hash, fallbackUrl, callback) {
     return;
   }
   this.tracker.getInfo(hash, function(info) {
-    if (info.peers.length > 0) {
-      trace('downloading over p2p: ' + hash);
-      // TODO hash validation
-      var download = new Download(that, info.peers, info.size, hash, fallbackUrl, callback);
-      that.pending[hash] = download;
-      download.start();
-    } else {
-      trace('downloading over xhr: ' + hash);
-      if (fallbackUrl !== null) {
-        // download via xhr, fallback has to allow CORS
-        xhrGet(fallbackUrl, function(data, err) {
-          if (data !== null) {
-            that.downloaded[hash] = data;
-            that.tracker.advertise(hash);
-          }
-          callback(data, err);
-        });
-      } else {
-        var err = new Error('P2P download unavailable, no fallback provided');
-        callback(null, err);
-      }
-    }
+    var download = new Download(that, info.peers, info.size, hash, fallbackUrl, callback);
+    that.pending[hash] = download;
+    download.start();
   });
 };

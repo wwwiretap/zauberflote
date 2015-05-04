@@ -7,7 +7,7 @@ var skt = io('http://localhost:5000');
 var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
 var cm = new ConnectionManager(sc);
-var dm = new DownloadManager(tr, cm);
+var dm = new DownloadManager(tr, cm, sha1.hash);
 
 /**
  * Automatic p2p download
