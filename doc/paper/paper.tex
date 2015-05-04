@@ -1,9 +1,7 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
 
-\usepackage{style, verbatim, url}
+\usepackage{style, verbatim, url, cleveref, breakurl}
 \usepackage[colorlinks=true, citecolor=blue]{hyperref}
-\usepackage{cleveref}
-\usepackage{breakurl}
 
 \makeatletter
 \newcommand{\crefnames}[3]{
@@ -14,10 +12,12 @@
 \makeatother
 \crefnames{part,chapter,section}{\S}{\S\S}
 
+\newcommand{\zbf}{Zauberfl\"{o}te}
+\newcommand{\projtitle}{\zbf: A Transparent Peer-to-Peer CDN}
 
 \begin{document}
 
-\title{\Large \bf Zauberfl\"{o}te: A Transparent Peer-to-Peer CDN}
+\title{\Large \bf \projtitle}
 
 \author{
     {\rm Anish Athalye}\\
@@ -31,12 +31,67 @@
 }
 
 \maketitle
-
 \thispagestyle{empty}
 
 \begin{abstract}
-    % TODO
+
 \end{abstract}
+
+\section{Introduction}
+
+
+\section{\zbf\ API}
+
+
+\section{Implementation}
+
+
+\subsection{Connection manager}
+
+
+\subsection{Download manager}
+
+
+\subsubsection{Chunking}
+
+
+\subsubsection{Hash validation}
+
+
+\subsubsection{Parallelization}
+
+
+\subsubsection{Fault tolerance}
+
+
+\subsection{Tracker Interface}
+
+\subsection{Signalling Channel}
+
+\subsection{DOM Injection Layer}
+
+
+\section{Future Work}
+\subsection*{Per-chunk hash validation}
+
+
+\subsection*{Hybrid downloads over HTTP and P2P}
+
+
+\subsection*{Variable request sizes}
+
+
+\subsection*{Bandwidth detection and prioritization}
+
+
+\subsection*{Support for HTML5 media}
+
+
+\subsection*{Benchmarking}
+
+
+\section{Conclusions}
+
 
 {\footnotesize \bibliographystyle{ieeetr}
 \bibliography{paper}}
