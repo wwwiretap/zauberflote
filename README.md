@@ -11,9 +11,10 @@ bin/fiddler`. Change the IP address at the top of `zauberflote.js` to match
 your server's IP and port on which `main.go` is running. Then, import the two
 Zauberflote files into your own HTML page as follows:
 
-<pre><code><script src="peerdl.js"></script>
+```html
+<script src="peerdl.js"></script>
 <script src="zauberflote.js"></script>
-</pre></code>
+```
 
 Attach the original URL of the asset as attribute "data-zf-fallback" of that
 asset. Generate a SHA1 hash corresponding to that asset and set it as attribute
