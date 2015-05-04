@@ -385,7 +385,7 @@ function DownloadManager(tracker, connectionManager, hashfn) {
   this.connectionManager = connectionManager;
   this.hashfn = hashfn;
   this.downloaded = {};
-  this.chunkSize = 1024; // 1KB chunk size
+  this.chunkSize = 25*1024; // chunk size in bytes
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
   this.pending = {}; // map from hash to Downloads
