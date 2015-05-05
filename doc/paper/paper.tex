@@ -101,7 +101,7 @@ Requests for chunks time out on a per-chunk basis. We track the time \zbf\ last 
 
 \subsection{Tracker interface}
 
-The tracker is hosted on a remote server and tracks client connections. The download manager opens a websocket connection with the remote tracker, which registers the existence of this client. Via this socket, the download manager sends requests for data, specifying a desired resource via that resource's unique SHA1 hash. Upon disconnection, the tracker "forgets" about the client and erases all data about the client's held resources.
+The tracker is hosted on a remote server and tracks client connections. The download manager opens a WebSocket connection with the remote tracker, which registers the existence of this client. Via this socket, the download manager can request a list of peers that have a certain resource, specifying the desired resource via that resource's unique SHA1 hash. After a client receives the full resource, the download manager publicizes that this client has the resource to the tracker. This client will then be included in the list of peers with that resource, as long as its WebSocket connection remains open. Upon WebSocket disconnection, the tracker "forgets" about the client and erases all data about the client's held resources.
 
 \subsection{Signaling channel}
 
