@@ -89,7 +89,12 @@ balancing.
 
 \subsection{Download manager}
 
-% Anish
+The download manager is the top-level client interface for peer-to-peer
+downloads. It provides an API where the client can provide a hash, and
+optionally, a fallback HTTP URL, and the download manager will asynchronously
+download the content associated with the hash and call a user-provided callback
+function when finished. The download manager implements reliable download,
+preferring peer-to-peer over HTTP when possible.
 
 \subsubsection{Chunking}
 
