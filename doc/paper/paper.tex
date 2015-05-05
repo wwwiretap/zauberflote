@@ -70,17 +70,31 @@ WebSockets~\cite{w3c:websocket} for client-server communication and
 WebRTC~\cite{w3c:webrtc} for peer-to-peer communication.
 
 \inclfigure{fig:components}{components.eps}{
-    Relationship between different components of the \zbf\ peer-to-peer
-    download service. Components in gray are standard browser APIs.
+    Relationship between different client-side components of the \zbf\
+    peer-to-peer download service. Components in gray are standard browser
+    APIs.
 }
 
 \subsection{Connection manager}
 
-% Anish
+The connection manager is responsible for establishing connections between
+peers and facilitating peer-to-peer message transfers. It is a thin layer on
+top of WebRTC that handles maintaining connections with multiple peers,
+associating peers with peer IDs that are assigned by our tracker. It manages
+all signaling through the signaling channel, which implements signaling through
+our central server using WebSockets. At this time, this signaling server is the
+same server that is running the tracker, but they are logically separate
+components, so theoretically, they could be decoupled if needed for better load
+balancing.
 
 \subsection{Download manager}
 
-% Anish
+The download manager is the top-level client interface for peer-to-peer
+downloads. It provides an API where the client can provide a hash, and
+optionally, a fallback HTTP URL, and the download manager will asynchronously
+download the content associated with the hash and call a user-provided callback
+function when finished. The download manager implements reliable download,
+preferring peer-to-peer over HTTP when possible.
 
 \subsubsection{Chunking}
 
