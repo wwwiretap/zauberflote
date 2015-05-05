@@ -113,15 +113,34 @@ from the tracker.
 
 \subsubsection{Hash validation}
 
-% Anish
+When fetching content peer-to-peer, it is necessary to authenticate data that
+is downloaded. \zbf\ achieves this by using a cryptographic hash function to
+authenticate data that is downloaded. Assets that are to be downloaded
+peer-to-peer are identified by their hash, and once the download manager
+finishes downloading the content from peers, it verifies that the hash of the
+contents matches what is expected. The download manager rejects content if
+there is an authentication error. In the current implementation, if this
+occurs, the download manager falls back to downloading the content over HTTP
+from the fallback URL.
 
 \subsubsection{Parallelization}
 
-% Anish
+\zbf\ divides assets into chunks primarily to enable parallelization. Because
+individual peers may not have high outbound bandwidth, it is beneficial to
+download in parallel from many peers. Our implementation parallelizes chunk
+downloads, with pending chunk requests balanced between available peers in the
+network. If certain peers are slow to respond, the download manager
+automatically requests chunks from faster peers to optimize download time.
+Parallel downloads help reduce download latency.
 
 \subsubsection{Fault tolerance}
 
-% Anish
+Our download manager implements reliable download semantics. The implementation
+is resilient to peer failure, automatically re-requesting chunks from live
+peers when necessary. In the worst case, even if all peers go down, the
+implementation falls back to downloading over pure HTTP from the centralized
+server as a last resort. In any case, the download manager guarantees that the
+data will be downloaded and that the download will be authenticated.
 
 \subsection{Tracker interface}
 
@@ -154,7 +173,7 @@ requests from the client for lists of peers with a given resource. When a client
 publicizes that it has a resource through the tracker interface, the remote tracker updates
 the list of peers with the resource to include this client, as
 long as its WebSocket connection remains open. Upon WebSocket disconnection,
-the tracker "forgets" about the client and erases all data about the client's
+the tracker ``forgets'' about the client and erases all data about the client's
 held resources.
 
 \subsection{WebRTC handshake channel}
