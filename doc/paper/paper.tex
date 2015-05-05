@@ -156,9 +156,9 @@ The client-side tracker interface  opens a WebSocket connection with the remote 
 which registers the existence of this client. The remote tracker responds to
 requests from the client for lists of peers with a given resource. When a client
 publicizes that it has a resource through the tracker interface, the remote tracker updates
-the list of peers with the resource to include this client, as 
-long as its WebSocket connection remains open. Upon WebSocket disconnection, 
-the tracker "forgets" about the client and erases all data about the client's 
+the list of peers with the resource to include this client, as
+long as its WebSocket connection remains open. Upon WebSocket disconnection,
+the tracker ``forgets'' about the client and erases all data about the client's
 held resources.
 
 \subsection{WebRTC handshake channel}
