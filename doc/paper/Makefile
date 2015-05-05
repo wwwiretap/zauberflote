@@ -4,7 +4,7 @@ BUILD := \
 DEPS := \
 	style.sty \
 	paper.bib \
-	components.eps
+	components.pdf
 
 LATEX  := pdflatex
 BIBTEX := bibtex
@@ -35,5 +35,5 @@ clean:
 
 # graphics targets
 
-components.eps: components.dot
-	$(DOT) -Teps $< > $@
+components.pdf: components.dot
+	$(DOT) -Tpdf $< > $@
