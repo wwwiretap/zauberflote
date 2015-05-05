@@ -152,7 +152,8 @@ letting the central tracker know that it possesses the resource.
 
 \subsection{Signaling channel}
 
-The signa
+The signaling channel enables
+% katie
 
 \subsection{DOM injection layer}
 
@@ -200,11 +201,21 @@ websocket connection with that peer, the server passes that message to the peer.
 
 \subsection{Variable request sizes}
 
-% Katie
+Implementing variation in requested chunk sizes could allow \zbf\ to independently
+determine a more optimal chunk size for each asset. For instance, we hypothesize
+that different chunk sizes are optimal for differently sized assets, and potentially
+for different media types. If \zbf\ more intelligently determined the optimal size
+of chunks for each resource, overall download latency would decrease.
 
 \subsection{Bandwidth detection and prioritization}
 
-% Katie
+If \zbf\ could detect which peers have higher bandwidth connections, and thus
+are more capable of swiftly delivering data to a client, \zbf\ could prioritize
+requesting data from these peers. Perhaps \zbf\ could request larger chunks from
+peers with higher bandwidth connections. \zbf\ could also dynamically react to
+poor connections with peers during the chunk requesting process; chunk requests
+that subsequently time out could be redistributed more intelligently among
+peers with higher bandwidth connections.
 
 \subsection{Support for HTML5 media}
 
