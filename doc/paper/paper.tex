@@ -101,15 +101,36 @@ Requests for chunks time out on a per-chunk basis. We track the time \zbf\ last 
 
 \subsection{Tracker interface}
 
-The tracker is hosted on a remote server and tracks client connections. The download manager opens a WebSocket connection with the remote tracker, which registers the existence of this client. Via this socket, the download manager can request a list of peers that have a certain resource, specifying the desired resource via that resource's unique SHA1 hash. After a client receives the full resource, the download manager publicizes that this client has the resource to the tracker. This client will then be included in the list of peers with that resource, as long as its WebSocket connection remains open. Upon WebSocket disconnection, the tracker "forgets" about the client and erases all data about the client's held resources.
+Via the tracker interface, the download manager can request a list of peers that 
+have a certain resource, specifying the desired resource via that resource's 
+unique SHA1 hash. After a client receives the full resource, the download 
+manager publicizes that this client has the resource via this tracker interface,
+letting the central tracker know that it possesses the resource.
 
 \subsection{Signaling channel}
 
-% Katie
+The signa
 
 \subsection{DOM injection layer}
 
 % Ankush
+
+\section{Server implementation}
+
+\subsection{Tracker}
+The tracker is hosted on a remote server and tracks client connections. 
+The client-side tracker interface  opens a WebSocket connection with the remote tracker, 
+which registers the existence of this client. The remote tracker responds to
+requests from the client for lists of peers with a given resource. When a client
+publicizes that it has a resource through the tracker interface, the remote tracker updates
+the list of peers with the resource to include this client, as 
+long as its WebSocket connection remains open. Upon WebSocket disconnection, 
+the tracker "forgets" about the client and erases all data about the client's 
+held resources.
+
+\subsection{WebRTC handshake channel}
+
+
 
 \section{Evaluation}
 
