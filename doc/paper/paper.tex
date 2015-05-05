@@ -98,8 +98,18 @@ preferring peer-to-peer over HTTP when possible.
 
 \subsubsection{Chunking}
 
-\zbf\ divides assets into chunks; chunks are individually requested and sent between peers. We use a standard chunk size of 10240 bytes in our implementation; preliminary tests showed this chunk size to be reasonable. When a client asks for a resource, the download manager for that client determines the number of chunks for that resource from the specified size. The download manager then evenly distributes requests for these chunks among the peers with the resource. \\
-Requests for chunks time out on a per-chunk basis. We track the time \zbf\ last sent a request for each chunk; if this time exceeds a cutoff, we randomly choose another peer with the resource and send the chunk request to that peer. We periodically retrieve an updated peers list for this resource from the tracker. 
+\zbf\ divides assets into chunks; chunks are individually requested and
+sent between peers. We use a standard chunk size of 10240 bytes in our
+implementation; preliminary tests showed this chunk size to be reasonable.
+When a client asks for a resource, the download manager for that client
+determines the number of chunks for that resource from the specified size.
+The download manager then evenly distributes requests for these chunks
+among the peers with the resource. \\
+Requests for chunks time out on a per-chunk basis. We track the time \zbf\
+last sent a request for each chunk; if this time exceeds a cutoff, we randomly
+choose another peer with the resource and send the chunk request to that
+peer. We periodically retrieve an updated peers list for this resource
+from the tracker.
 
 \subsubsection{Hash validation}
 
@@ -115,9 +125,9 @@ Requests for chunks time out on a per-chunk basis. We track the time \zbf\ last 
 
 \subsection{Tracker interface}
 
-Via the tracker interface, the download manager can request a list of peers that 
-have a certain resource, specifying the desired resource via that resource's 
-unique SHA1 hash. After a client receives the full resource, the download 
+Via the tracker interface, the download manager can request a list of peers that
+have a certain resource, specifying the desired resource via that resource's
+unique SHA1 hash. After a client receives the full resource, the download
 manager publicizes that this client has the resource via this tracker interface,
 letting the central tracker know that it possesses the resource.
 
@@ -131,20 +141,29 @@ The signa
 
 \section{Server implementation}
 
+There are two main server-side components to \zbf\. First is the tracker,
+which maintains a mapping from resource hashes to the peers that have that
+resource. Second is the WebRTC handshake channel, which passes information
+between peers to enable them to open WebRTC data channels.
+
 \subsection{Tracker}
-The tracker is hosted on a remote server and tracks client connections. 
-The client-side tracker interface  opens a WebSocket connection with the remote tracker, 
+The tracker is hosted on a remote server and tracks client connections.
+The client-side tracker interface  opens a WebSocket connection with the remote tracker,
 which registers the existence of this client. The remote tracker responds to
 requests from the client for lists of peers with a given resource. When a client
 publicizes that it has a resource through the tracker interface, the remote tracker updates
-the list of peers with the resource to include this client, as 
-long as its WebSocket connection remains open. Upon WebSocket disconnection, 
-the tracker "forgets" about the client and erases all data about the client's 
+the list of peers with the resource to include this client, as
+long as its WebSocket connection remains open. Upon WebSocket disconnection,
+the tracker "forgets" about the client and erases all data about the client's
 held resources.
 
 \subsection{WebRTC handshake channel}
 
-
+WebRTC handshake information--the offers, ICE candidates, and answers--are
+sent through the client-side signaling channel through a websocket to
+the server. The client-side signaling channel specifies a peer to which
+this WebRTC handshake information should be sent; if the server has an open
+websocket connection with that peer, the server passes that message to the peer.
 
 \section{Evaluation}
 
