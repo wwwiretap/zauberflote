@@ -60,7 +60,7 @@
 
 \subsubsection{Chunking}
 
-% Katie
+\zbf\ divides assets into chunks; chunks are individually requested and sent between peers. We use a standard chunk size of 10240 bytes in our implementation; preliminary tests showed this chunk size to be reasonable. When a client asks for a resource, the download manager for that client determines the number of chunks for that resource from the specified size. The download manager then evenly distributes requests for these chunks among the peers with the resource. 
 
 \subsubsection{Hash validation}
 

@@ -315,9 +315,6 @@ Download.prototype.start = function() {
           // update chunk data
           chunk.peer = peer;
           var now = new Date();
-          // update chunk data
-          chunk.peer = peer;
-          var now = new Date();
           chunk.lastSent = now.getTime();
           chunk.numTries = chunk.numTries + 1;
         }
