@@ -10,17 +10,23 @@ digraph {
         cm [label="Connection Manager"];
     }
     sc [label="Signaling Channel"];
-    ws [label="Websocket"];
+    {
+        rank=same;
+        ws [label="WebSocket", style=filled, color=black, fillcolor=gray85];
+        wr [label="WebRTC", style=filled, color=black, fillcolor=gray85];
+    }
 
     dm -> tr [label="   calls   "];
     dm -> cm [label="   calls   "];
     cm -> sc [label="   calls   "];
     tr -> ws [label="   calls   "];
     sc -> ws [label="   calls   "];
+    sc -> wr [label="   calls   "]
 
     tr -> dm [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
     cm -> dm [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
     sc -> cm [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
     ws -> tr [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
     ws -> sc [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
+    wr -> sc [label="   callbacks   ", style=dotted, color=gray50, fontcolor=gray50];
 }

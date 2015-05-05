@@ -1,7 +1,8 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
 
 \usepackage{style, verbatim, url, graphicx}
-\usepackage[colorlinks=true, citecolor=blue]{hyperref}
+\usepackage[colorlinks=true, citecolor=blue, linkcolor=blue]{hyperref}
+\usepackage{caption}
 \usepackage{cleveref, breakurl}
 
 \makeatletter
@@ -15,6 +16,15 @@
 
 \newcommand{\zbf}{Zauberfl\"{o}te}
 \newcommand{\projtitle}{\zbf: A Transparent Peer-to-Peer CDN}
+\newcommand{\inclfigure}[3]{
+    \begin{figure}
+        \begin{centering}
+            \includegraphics[width=.8\linewidth]{#2}
+            \caption{#3}
+            \label{#1}
+        \end{centering}
+    \end{figure}
+}
 
 \begin{document}
 
@@ -48,14 +58,21 @@
 
 \section{Implementation}
 
-\begin{figure}
-    \begin{centering}
-        \includegraphics[width=.8\linewidth]{components.eps}
-        \caption{Relationship between different components of the \zbf
-        peer-to-peer download service.}
-        \label{fig:components}
-    \end{centering}
-\end{figure}
+The \zbf\ architecture consists of several loosely-connected components (see
+figure~\ref{fig:components}). At the highest level, there is a download manager that
+provides a reliable download service. It relies on the tracker interface and
+the connection manager. The tracker interface facilitates communication with
+the central tracker for information about peers and file sizes, and the
+connection manager provides an interface for peer-to-peer message transfer.
+
+Our components rely on two standard APIs provided by modern browsers,
+WebSockets~\cite{w3c:websocket} for client-server communication and
+WebRTC~\cite{w3c:webrtc} for peer-to-peer communication.
+
+\inclfigure{fig:components}{components.eps}{
+    Relationship between different components of the \zbf\ peer-to-peer
+    download service. Components in gray are standard browser APIs.
+}
 
 \subsection{Connection manager}
 
