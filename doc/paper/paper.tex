@@ -60,7 +60,8 @@
 
 \subsubsection{Chunking}
 
-\zbf\ divides assets into chunks; chunks are individually requested and sent between peers. We use a standard chunk size of 10240 bytes in our implementation; preliminary tests showed this chunk size to be reasonable. When a client asks for a resource, the download manager for that client determines the number of chunks for that resource from the specified size. The download manager then evenly distributes requests for these chunks among the peers with the resource. 
+\zbf\ divides assets into chunks; chunks are individually requested and sent between peers. We use a standard chunk size of 10240 bytes in our implementation; preliminary tests showed this chunk size to be reasonable. When a client asks for a resource, the download manager for that client determines the number of chunks for that resource from the specified size. The download manager then evenly distributes requests for these chunks among the peers with the resource. \\
+Requests for chunks time out on a per-chunk basis. We track the time \zbf\ last sent a request for each chunk; if this time exceeds a cutoff, we randomly choose another peer with the resource and send the chunk request to that peer. We periodically retrieve an updated peers list for this resource from the tracker. 
 
 \subsubsection{Hash validation}
 
@@ -76,7 +77,7 @@
 
 \subsection{Tracker interface}
 
-% Katie
+The tracker is hosted on a remote server and tracks client connections. The download manager opens a websocket connection with the remote tracker, which registers the existence of this client. Via this socket, the download manager sends requests for data, specifying a desired resource via that resource's unique SHA1 hash. Upon disconnection, the tracker "forgets" about the client and erases all data about the client's held resources.
 
 \subsection{Signaling channel}
 
@@ -115,7 +116,7 @@
 
 \section{Conclusions}
 
-% TODO
+% Katie
 
 
 {\footnotesize \bibliographystyle{ieeetr}
