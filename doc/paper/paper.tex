@@ -1,6 +1,6 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
 
-\usepackage{style, verbatim, url}
+\usepackage{style, verbatim, url, graphicx}
 \usepackage[colorlinks=true, citecolor=blue]{hyperref}
 \usepackage{cleveref, breakurl}
 
@@ -48,7 +48,14 @@
 
 \section{Implementation}
 
-% Anish
+\begin{figure}
+    \begin{centering}
+        \includegraphics[width=.8\linewidth]{components.eps}
+        \caption{Relationship between different components of the \zbf
+        peer-to-peer download service.}
+        \label{fig:components}
+    \end{centering}
+\end{figure}
 
 \subsection{Connection manager}
 
