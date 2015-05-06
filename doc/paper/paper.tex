@@ -152,8 +152,12 @@ letting the central tracker know that it possesses the resource.
 
 \subsection{Signaling channel}
 
-The signaling channel enables
-% katie
+The signaling channel facilitates opening the WebRTC data channel connection between
+peers. The WebRTC protocol requires one peer to send a WebRTC offer and ICE candidate
+to the other peer, and that other peer to send back a WebRTC answer, for a peer-to-peer
+data channel to be opened. The server-side signaling channel facilitates this
+information transfer between peers by  directing offers, ICE candidates, and answers
+to their specified peer recipient.
 
 \subsection{DOM injection layer}
 
