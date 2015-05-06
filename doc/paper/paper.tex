@@ -45,16 +45,31 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-
+% TODO
 \end{abstract}
 
 \section{Introduction}
+In today's day and age, it's very common for personal blogs and other small websites to gain popularity on websites such as Reddit. Since these websites usually experience much smaller loads, the hardware devoted to hosting them is typically not powerful enough to cope with a large amount of traffic. These sudden, unexpected bursts of traffic often result in websites loading at extremely slow speeds (or not loading at all) and is colloquially known as the "Reddit Hug of Death".
 
-% TODO Ankush
+Typical means for dealing with this situation involve utilizing Content Delivery Networks (CDNs), but these are usually out of the budgetary constraints for websites which only experience such loads on an occasional basis.
+
+Currently, peer-to-peer content delivery networks do exist, yet are usually
+closed-source. PeerCDN~\cite{peercdn} is one such example found in
+industry; it offloads site hosting to users of a site, significantly lowering strain on content delivery from a central source. \zbf\ is an open-sourced system
+that will allow developers to easily integrate a peer-to-peer CDN to expedite
+content delivery to clients even when operating under heavy load.
+
+\zbf's design is based on the BitTorrent protocol~\cite{cohen:bittorrent}, where
+clients requesting content will attempt to receive chunks of data from other
+clients, rather than retrieving the entire file from a central server.
 
 \section{\zbf\ API}
 
-% TODO Ankush
+\zbf\ supports peer-to-peer loading for CSS (via \texttt{link} elements), Javascript (via \texttt{script} elements), and images (via \texttt{img} elements). In order for an existing website to utilize \zbf, the developer simply needs to make two changes to the DOM elements.
+
+The first change that must be made is renaming the \texttt{src} or \texttt{href} attribute to  \texttt{data-zf-fallback}. \zbf\ uses the \texttt{data-zf-fallback} attribute in order to (1) prevent the browser from automatically fetching the resources, and (2) provide a URL to be used in the event that the peer-to-peer network is unable to serve the content.  
+
+The second attribute that must be present on a DOM element that is fetched by \zbf\ is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute is the SHA1 hash of that resource, which can be computed by the developer, and is utilized by \zbf\ in order to ensure integrity of data fetched via peer-to-peer interaction.
 
 \section{Implementation}
 
@@ -160,8 +175,7 @@ information transfer between peers by  directing offers, ICE candidates, and ans
 to their specified peer recipient.
 
 \subsection{DOM injection layer}
-
-% Ankush
+%! Ankush
 
 \section{Server implementation}
 
@@ -196,12 +210,13 @@ websocket connection with that peer, the server passes that message to the peer.
 \section{Future work}
 
 \subsection{Per-chunk hash validation}
+As of right now, \zbf\ verifies the integrity of the downloaded resource once all chunks have been retrieved and joined. In normal circumstances where all chunks successfully download, this may not prove to be an issue. However, waiting until all chunks are downloaded and combined to verify the file means that if a single chunk had been corrupted or compromised, all chunks for the file would need to be downloaded, combined, and verified again.
 
-% Ankush
+An improvement to \zbf\ that would mitigate this issue would be to have the Tracker module provide checksums for each chunk. From the user's perspective, the \texttt{data-zf-hash} attribute currently used to store the hash of the file would be replaced with the hash of the JSON object storing a list of the hashes for each chunk. Upon connection to the tracker, each client would receive that list and verify its integrity, and then be able to verify and redownload each chunk independently in the event of failure.. 
 
 \subsection{Hybrid downloads over HTTP and P2P}
 
-% Ankush
+Another improvement to \zbf\ would be to allow it to parallelize downloads via HTTP and P2P transfers simultaneously. By using the \texttt{Range} HTTP header attribute, \zbf\ could fetch the same data as contained in P2P chunks from the HTTP fallback server. By utilizing both HTTP and P2P, \zbf\ may be able to provide service speed that is expected in all instances to be faster than simply using HTTP alone.
 
 \subsection{Variable request sizes}
 
@@ -222,9 +237,11 @@ that subsequently time out could be redistributed more intelligently among
 peers with higher bandwidth connections.
 
 \subsection{Support for HTML5 media}
+It is possible to add functionality such that \zbf\ can construct \texttt{ReadableStream}s (as specified by the Streams standard) %TODO: cite https://streams.spec.whatwg.org
+from the chunks of data as it receives them. Using this stream, the DOM injection layer could feasibly replace HTML5 media elements such as embedded Video and Audio. Since these types of media are particularly large in size, being able to distribute them in a decentralized, peer-to-peer manner could provide substantial load reduction for the central server.
 
-% Ankush
-
+\subsection{Automatic conversion to \zbf }
+% TODO
 
 \section{Conclusions}
 
