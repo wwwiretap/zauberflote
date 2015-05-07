@@ -23,8 +23,10 @@
     <img id="image" data-zf-fallback="/woods.jpg"
          data-zf-hash="59de405a462625aa66d9373f058e09b6cd910159"></img>
     <script>
+    loadTime = "";
     $("#image").load(function() {
         var delta = (new Date()) - startTime;
+        loadTime = delta.toString();
         $("#loadtime").html("Page load time: " + delta + "ms");
     });
     </script>

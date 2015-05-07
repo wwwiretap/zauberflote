@@ -3,6 +3,8 @@ import org.openqa.selenium.remote._
 import java.net.URL
 import collection.JavaConversions._
 import java.util.concurrent.TimeUnit._
+import com.corundumstudio.socketio._
+import com.corundumstudio.socketio.listener._
 
 object Driver {
 
@@ -30,12 +32,37 @@ object Driver {
         """
       )
     }
-    // Thread.sleep(10000)
-    // driver.quit()
+    def done(): Boolean = {
+      for (window <- windows) {
+        switchTo(window)
+        var res = jse.executeScript("""
+          return loadTime;
+          """
+        )
+        if (res == null || res.asInstanceOf[String] == "") {
+          return false
+        }
+      }
+      return true
+    }
+
+    while (!done()) {
+      Thread.sleep(250)
+    }
+
+    for (window <- windows) {
+      switchTo(window)
+      var res = jse.executeScript("""
+        return loadTime;
+        """
+      )
+      println(res.asInstanceOf[String])
+    }
+    driver.quit()
   }
 
   def main(args: Array[String]) {
-    run(10)
+    run(3)
   }
 
 }
