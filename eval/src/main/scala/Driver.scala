@@ -26,8 +26,8 @@ object Driver {
         var callback = arguments[arguments.length - 1];
         callback();
         setTimeout(function() {
-          window.location = "http://localhost:8080/benchmark.html?http_only";
-          // window.location = "http://localhost:8080/benchmark.html";
+          // window.location = "http://localhost:8080/benchmark.html?http_only";
+          window.location = "http://localhost:8080/benchmark.html";
         }, 0);
         """
       )
@@ -36,7 +36,7 @@ object Driver {
       for (window <- windows) {
         switchTo(window)
         var res = jse.executeScript("""
-          return loadTime;
+          return (window.loadTime || "");
           """
         )
         if (res == null || res.asInstanceOf[String] == "") {
@@ -62,7 +62,12 @@ object Driver {
   }
 
   def main(args: Array[String]) {
-    run(3)
+    var t = new Thread(new Runnable {
+      def run() { Driver.run(5) }
+    })
+    t.start()
+    run(5)
+    t.join()
   }
 
 }
