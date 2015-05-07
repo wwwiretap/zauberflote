@@ -255,9 +255,26 @@ websocket connection with that peer, the server passes that message to the peer.
 
 \section{Evaluation}
 
-% TODO
+% TODO simple HTML page loading one resource
+
+% TODO visual aid showing load time
+
+\subsection{Simulating the "reddit effect"}
+
+% TODO hosting resource (image) on throttled server
+
+\subsection{Testing infrastructure}
+
+% TODO selenium & scala
+% anish should probably do this section
+
+\subsection{Results}
 
 \section{Future work}
+
+There remains numerous optimizations that would make \zbf more performant
+when used on a deployed, high-traffic site. We detail these potential optimization
+in this section.
 
 \subsection{Per-chunk hash validation}
 As of right now, \zbf verifies the integrity of the downloaded resource once all
