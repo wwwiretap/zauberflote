@@ -66,18 +66,22 @@ object Driver {
   }
 
   def done(windows: Seq[Window]): Boolean = {
-    for (window <- windows) {
-      switchTo(window)
-      val jse = window._1.asInstanceOf[JavascriptExecutor]
-      var res = jse.executeScript("""
-        return (window.loadTime || "");
-        """
-        )
-      if (res == null || res.asInstanceOf[String] == "") {
-        return false
+    try {
+      for (window <- windows) {
+        switchTo(window)
+        val jse = window._1.asInstanceOf[JavascriptExecutor]
+        var res = jse.executeScript("""
+          return (window.loadTime || "");
+          """
+          )
+        if (res == null || res.asInstanceOf[String] == "") {
+          return false
+        }
       }
+      return true
+    } catch {
+      case _: WebDriverException => return false
     }
-    return true
   }
 
   def wait(windows: Seq[Window]) {
