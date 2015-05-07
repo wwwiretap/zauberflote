@@ -3,7 +3,7 @@
  * Setup
  */
 
-var skt = io('http://i.anish.io:5000');
+var skt = io('http://localhost:5000');
 var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
 var cm = new ConnectionManager(sc);
