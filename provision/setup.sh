@@ -8,3 +8,4 @@ patch /etc/nginx/sites-available/default <<EOF
 36a37
 > 	add_header 'Access-Control-Allow-Origin' '*';
 EOF
+sudo service nginx restart
