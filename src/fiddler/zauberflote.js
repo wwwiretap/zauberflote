@@ -13,6 +13,10 @@ var dm = new DownloadManager(tr, cm, sha1.hash);
  * Automatic p2p download
  */
 
+if (window.location.toString().indexOf('http_only') !== -1) {
+  tr.HTTP_ONLY = true;
+}
+
 $(document).ready(function() {
   var p2pAssets = $('[data-zf-hash]');
   for (var i = 0; i < p2pAssets.length; i++) {

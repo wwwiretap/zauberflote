@@ -11,7 +11,7 @@ object Driver {
     val url = new URL("http://localhost:9515")
     val driver = new RemoteWebDriver(url, capabilities)
     val jse = driver.asInstanceOf[JavascriptExecutor]
-    for (i <- 1 to numWindows) {
+    for (i <- 1 until numWindows) {
       jse.executeScript("window.open();");
     }
     var windows = driver.getWindowHandles()
@@ -24,7 +24,8 @@ object Driver {
         var callback = arguments[arguments.length - 1];
         callback();
         setTimeout(function() {
-          window.location = "http://localhost:8080/benchmark.html";
+          window.location = "http://localhost:8080/benchmark.html?http_only";
+          // window.location = "http://localhost:8080/benchmark.html";
         }, 0);
         """
       )
