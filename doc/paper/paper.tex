@@ -225,7 +225,7 @@ information transfer between peers by directing offers, ICE candidates, and answ
 to their specified peer recipient.
 
 \subsection{DOM injection layer}
-The DOM injection layer facilitates the link between the DOM as displayed in the browser and the entire peer-to-peer system. The DOM injection layer creates a websocket, and then instantiates a Tracker and Signaling Channel. It uses these to then instantiate a Connection Manager and in turn, uses this to instantiate a Download Manager.
+The DOM injection layer facilitates the link between the DOM as displayed in the browser and the entire peer-to-peer system. The DOM injection layer creates a WebSocket, and then instantiates a Tracker and Signaling Channel. It uses these to then instantiate a Connection Manager and in turn, uses this to instantiate a Download Manager.
 
 The DOM injection layer then iterates through all the DOM elements with the \texttt{data-zf-hash} and \texttt{data-zf-fallback} attributes. It the values of these attributes to fetch the data via the Download Manager. Upon receiving the data for each web element, the DOM injection layer creates an in-memory Blob and generates URL for this object. It then obeys the following rules, which can easily be expanded to support other DOM elements:
 
@@ -235,14 +235,14 @@ The DOM injection layer then iterates through all the DOM elements with the \tex
 \item[All other elements] have the \texttt{type} of their Blob set to \texttt{application/octet-stream}. They then have their \texttt{src} attribute set to the URL of the in-memory Blob. As most browsers can intelligently determine the content of \texttt{application/octet-stream} data, this functions properly for Image nodes, and serves as the generic template for any other node.
 \end{description}
 
-\section{Server implementation}
+\subsection{Server implementation}
 
 There are two main server-side components to \zbf. First is the tracker,
 which maintains a mapping from resource hashes to the peers that have that
 resource. Second is the WebRTC handshake channel, which passes information
 between peers to enable them to open WebRTC data channels.
 
-\subsection{Tracker}
+\subsubsection{Tracker}
 The tracker is hosted on a remote server and tracks client connections.
 The client-side tracker interface opens a WebSocket connection with the remote tracker,
 which registers the existence of this client. The remote tracker responds to
@@ -253,7 +253,7 @@ long as its WebSocket connection remains open. Upon WebSocket disconnection,
 the tracker ``forgets'' about the client and erases all data about the client's
 held resources.
 
-\subsection{WebRTC handshake channel}
+\subsubsection{WebRTC handshake channel}
 
 WebRTC handshake information--the offers, ICE candidates, and answers--are
 sent through the client-side signaling channel through a websocket to
@@ -269,34 +269,55 @@ scenarios. Specifically, we varied two parameters: the number of seeding peers a
 number of leeching peers. A seeding peer is a peer that has the desired resource, which
 in our tests, was the single image on the site. A leeching peer is a peer that desires the
 resource, so must request it either from the central site host or from peers with the resource.
+
 Our tests launched a certain number of seeding peers, then launched a number of
 leeching peers, measuring the average load latency for the leeching peers. We compare
 this latency data with the page load latency when the leeching peers must load the content from the
 central site host. 
 
 \subsection{Simulating the "reddit effect"}
-
 Our tests involved programmatically opening browser windows and measuring load times.
 Due to limitations of the number of browser windows that can be reasonably opened
 and the memory overhead of Chrome, our browser testing environment of choice, we could
 not reasonably open enough browser windows to exactly imitate millions of simultaneous
 visitors to a site. Instead, we simulated the "reddit effect" by throttling the content delivery
 bandwidth of the central server hosting the desired resource. We limited the content delivery
-rate to 512kbps and performed benchmark tests that compared the performance of \zbf 
+rate to 64 Kb/s and performed benchmark tests that compared the performance of \zbf 
 against the HTTP content delivery latency under the throttled bandwidth conditions.
+
 
 \subsection{Testing infrastructure}
 
-% TODO selenium & scala
+% TODO selenium with chromedriver & scala
 % anish should probably do this section
 
 \subsection{Results}
+ % TODO
+
+
+\subsubsection{Scalability of \zbf}
+The first empirical analysis that we performed was determining how page load time over \zbf scales as we vary the number of users who have the page loaded (we call these users \textit{seeders}) and the number of users attempting to concurrently download the page (we call these users \textit{leechers}).
+
+\begin{figure}[h]
+% TODO: heatmap here
+\caption{Average page load time over P2P for seeders vs leechers}
+\end{figure}
+
+\subsubsection{\zbf vs HTTP}
+% TODO: figure out ratio of seeders to leechers
+Our next empirical analysis was to keep the ratio of seeders to leechers constant at X, and compare the page load times for a throttled HTTP server vs \zbf as we increase the number of users attempting to concurrently load the page. 
+
+\begin{figure}[h]
+% TODO: other plot here
+% TODO: figure out ratio of seeders to leechers
+\caption{Average page load time over P2P compared to HTTP on throttled server assuming constant ratio of X seeders per leecher}
+\end{figure}
 
 \section{Future work}
 
 There remains numerous optimizations that would make \zbf more performant
-when used on a deployed, high-traffic site. We detail these potential optimization
-in this section.
+when used on a deployed, high-traffic site. We detail these potential optimizations
+in this section, along with features which could allow \zbf to handle more use cases.
 
 \subsection{Per-chunk hash validation}
 As of right now, \zbf verifies the integrity of the downloaded resource once all
@@ -356,7 +377,7 @@ integration pains and increase adoption.
 
 \section{Related work}
 
-% TODO cite peercdn in bibtex
+%! TODO cite peercdn in bibtex
 Currently, alternative peer-to-peer content delivery networks do exist. The three
 prominent peer-to-peer CDNs are PeerJS, PeerCDN, and Peer5. PeerJS is open-sourced
 and similarly transparent, but only encapsulates the functionality of our connection manager
@@ -369,7 +390,7 @@ not transparent to the clients on which it runs.
 
 \section{Conclusions}
 
-% Katie
+% TODO: Katie
 \zbf is an open-sourced system
 that will allow developers to easily integrate a peer-to-peer CDN to expedite
 content delivery to clients even when operating under heavy load.
