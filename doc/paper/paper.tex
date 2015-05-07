@@ -45,34 +45,80 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-% TODO
+\zbf is a peer-to-peer system based on the BitTorrent protocol that uses WebRTC
+to distribute content between peers. \zbf provides an easily accessible way for
+developers to alleviate content delivery bandwidth concerns by marking DOM elements
+such that \zbf will fetch these resources from peers with that resource. The \zbf
+system has server-side tracker and WebRTC signaling channel components, as well
+as client-side scripting that requests and delivers content between peers.
+This version of the system implements basic chunking, parallelism, and fault tolerance.
+In this paper, we describe the motivation for \zbf and the design and implementation of the
+different components that comprise the system. We then detail future improvements
+that could be made to increase the robustness and performance of the overall system.
 \end{abstract}
 
 \section{Introduction}
-In today's day and age, it's very common for personal blogs and other small websites to gain popularity on websites such as Reddit. Since these websites usually experience much smaller loads, the hardware devoted to hosting them is typically not powerful enough to cope with a large amount of traffic. These sudden, unexpected bursts of traffic often result in websites loading at extremely slow speeds (or not loading at all) and is colloquially known as the "Reddit Hug of Death".
+It is common for personal blogs and other small websites to gain sudden attention
+on large, high-traffic websites such as Reddit. Since these websites usually
+experience much smaller traffic loads, the hardware devoted to hosting them
+is typically not powerful enough to cope with this large influx of content requests.
+These sudden, unexpected bursts of traffic often result in websites loading at
+extremely slow speeds, or not loading at all, and is colloquially known as the
+"Reddit Hug of Death". \\
 
-Typical means for dealing with this situation involve utilizing Content Delivery Networks (CDNs), but these are usually out of the budgetary constraints for websites which only experience such loads on an occasional basis.
+Typical means for dealing with this situation involve utilizing Content Delivery
+Networks (CDNs), but these are usually out of the budgetary constraints for
+websites which only experience such loads on an occasional basis. An ideal
+solution would be a lightweight means to mimic the benefits of an ordinary
+CDN, which is typically backed by a robust network of machines. \\
 
-% TODO cite peercdn in bibtex
-Currently, peer-to-peer content delivery networks do exist, yet are usually
-closed-source. PeerCDN~\cite{peercdn} is one such example found in
-industry; it offloads site hosting to users of a site, significantly lowering strain on content delivery from a central source. \zbf is an open-sourced system
-that will allow developers to easily integrate a peer-to-peer CDN to expedite
-content delivery to clients even when operating under heavy load.
+In this paper, we present \zbf, a peer-to-peer CDN. \zbf provides an easy way
+for developers to distribute content to clients via a peer-to-peer network,
+rather than directly from the central server that hosts the content. \zbf
+is comprised of a server-side component and a client-side component. The
+centralized, server-side component both tracks resource propagation metadata
+and acts as an assist for opening peer-to-peer data channel connections. The
+lightweight client-side component requests resources from peers and distributes
+resources in response to peer requests. \\
 
-\zbf's design is based on the BitTorrent protocol~\cite{cohen:bittorrent}, where
-clients requesting content will attempt to receive chunks of data from other
-clients, rather than retrieving the entire file from a central server.
+\zbf's design is based on the BitTorrent protocol~\cite{cohen:bittorrent}, by which
+clients requesting content attempt to receive chunks of data from other
+clients, rather than retrieving the entire file from a central server. As
+with BitTorrent trackers, any developer could host their own tracker and service
+it to connect peers requesting a resource with peers distributing the resource. \\
 
-% TODO talk about why this is a hard problem
+The \zbf client-side code runs purely in the browser, and is completely transparent
+to the user. The user does not have to install any application on their
+computer to obtain desired resources peer-to-peer. As a result, the \zbf client
+code only runs when a user is currently visiting the website, therefore adding
+no burden to the user from constant background processes. \\
+
+In designing \zbf, we took into consideration the unique problems presented
+by browser-to-browser content streaming. Website visitor churn is often very
+high with any type of website; our system had to be robust under these common
+conditions. \zbf forms peer-to-peer connections quickly and immediately streams
+requested resources through these data channel connections. \zbf also recovers
+quickly from data request failures; the \zbf data chunking component minimizes
+latency from these failures and quickly retries resource requests with other
+peers.
 
 \section{\zbf API}
 
-\zbf supports peer-to-peer loading for CSS (via \texttt{link} elements), Javascript (via \texttt{script} elements), and images (via \texttt{img} elements). In order for an existing website to utilize \zbf, the developer simply needs to make two changes to the DOM elements.
+\zbf supports peer-to-peer loading for CSS (via \texttt{link} elements),
+Javascript (via \texttt{script} elements), and images (via \texttt{img} elements).
+For an existing website to utilize \zbf, the developer simply needs
+to make two changes to the DOM elements. \\
 
-The first change that must be made is renaming the \texttt{src} or \texttt{href} attribute to  \texttt{data-zf-fallback}. \zbf uses the \texttt{data-zf-fallback} attribute in order to (1) prevent the browser from automatically fetching the resources, and (2) provide a URL to be used in the event that the peer-to-peer network is unable to serve the content.
+The first change is renaming the \texttt{src} or \texttt{href} attribute to
+\texttt{data-zf-fallback}. \zbf uses the \texttt{data-zf-fallback} attribute
+in order to (1) prevent the browser from automatically fetching the resources,
+and (2) provide a URL to be used in the event that the peer-to-peer network
+is unable to serve the content. \\
 
-The second attribute that must be present on a DOM element that is fetched by \zbf is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute is the SHA1 hash of that resource, which can be computed by the developer, and is utilized by \zbf in order to ensure integrity of data fetched via peer-to-peer interaction.
+The second attribute that must be present on a DOM element that is fetched by
+\zbf is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute
+is the SHA1 hash of that resource, which can be computed by the developer, and
+is utilized by \zbf to ensure integrity of data fetched via peer-to-peer interaction.
 
 \section{Implementation}
 
@@ -81,7 +127,7 @@ figure~\ref{fig:components}). At the highest level, there is a download manager 
 provides a reliable download service. It relies on the tracker interface and
 the connection manager. The tracker interface facilitates communication with
 the central tracker for information about peers and file sizes, and the
-connection manager provides an interface for peer-to-peer message transfer.
+connection manager provides an interface for peer-to-peer message transfer. \\
 
 Our components rely on two standard APIs provided by modern browsers,
 WebSockets~\cite{w3c:websocket} for client-server communication and
@@ -102,14 +148,14 @@ associating peers with peer IDs that are assigned by our tracker. It manages
 all signaling through the signaling channel, which implements signaling through
 our central server using WebSockets. At this time, this signaling server is the
 same server that is running the tracker, but they are logically separate
-components, so theoretically, they could be decoupled if needed for better load
+components, so theoretically, they could be decoupled if the need arises for better load
 balancing.
 
 \subsection{Download manager}
 
 The download manager is the top-level client interface for peer-to-peer
-downloads. It provides an API where the client can provide a hash, and
-optionally, a fallback HTTP URL, and the download manager will asynchronously
+downloads. It provides an API by which the client can provide a hash, and
+optionally, a fallback HTTP URL. The download manager will asynchronously
 download the content associated with the hash and call a user-provided callback
 function when finished. The download manager implements reliable download,
 preferring peer-to-peer over HTTP when possible.
@@ -120,14 +166,15 @@ preferring peer-to-peer over HTTP when possible.
 sent between peers. We use a standard chunk size of 10240 bytes in our
 implementation; preliminary tests showed this chunk size to be reasonable.
 When a client asks for a resource, the download manager for that client
-determines the number of chunks for that resource from the specified size.
+determines the number of chunks for that resource from the resource's total size.
 The download manager then evenly distributes requests for these chunks
 among the peers with the resource. \\
 Requests for chunks time out on a per-chunk basis. We track the time \zbf
 last sent a request for each chunk; if this time exceeds a cutoff, we randomly
 choose another peer with the resource and send the chunk request to that
 peer. We periodically retrieve an updated peers list for this resource
-from the tracker.
+from the tracker. \zbf uses exponential backoff when sending chunk requests
+so we don't flood peers with requests as a result of slow network connectivity.
 
 \subsubsection{Hash validation}
 
@@ -174,11 +221,11 @@ The signaling channel facilitates opening the WebRTC data channel connection bet
 peers. The WebRTC protocol requires one peer to send a WebRTC offer and ICE candidate
 to the other peer, and that other peer to send back a WebRTC answer, for a peer-to-peer
 data channel to be opened. The server-side signaling channel facilitates this
-information transfer between peers by  directing offers, ICE candidates, and answers
+information transfer between peers by directing offers, ICE candidates, and answers
 to their specified peer recipient.
 
 \subsection{DOM injection layer}
-%! Ankush
+% Ankush
 
 \section{Server implementation}
 
@@ -189,7 +236,7 @@ between peers to enable them to open WebRTC data channels.
 
 \subsection{Tracker}
 The tracker is hosted on a remote server and tracks client connections.
-The client-side tracker interface  opens a WebSocket connection with the remote tracker,
+The client-side tracker interface opens a WebSocket connection with the remote tracker,
 which registers the existence of this client. The remote tracker responds to
 requests from the client for lists of peers with a given resource. When a client
 publicizes that it has a resource through the tracker interface, the remote tracker updates
@@ -213,9 +260,20 @@ websocket connection with that peer, the server passes that message to the peer.
 \section{Future work}
 
 \subsection{Per-chunk hash validation}
-As of right now, \zbf verifies the integrity of the downloaded resource once all chunks have been retrieved and joined. In normal circumstances where all chunks successfully download, this may not prove to be an issue. However, waiting until all chunks are downloaded and combined to verify the file means that if a single chunk had been corrupted or compromised, all chunks for the file would need to be downloaded, combined, and verified again.
+As of right now, \zbf verifies the integrity of the downloaded resource once all
+chunks have been retrieved and joined. In normal circumstances where all chunks
+successfully download, this may not prove to be an issue. However, waiting until
+all chunks are downloaded and combined to verify the file means that if a single
+chunk had been corrupted or compromised, all chunks for the file would need to be
+downloaded, combined, and verified again. \\
 
-An improvement to \zbf that would mitigate this issue would be to have the Tracker module provide checksums for each chunk. From the user's perspective, the \texttt{data-zf-hash} attribute currently used to store the hash of the file would be replaced with the hash of the JSON object storing a list of the hashes for each chunk. Upon connection to the tracker, each client would receive that list and verify its integrity, and then be able to verify and redownload each chunk independently in the event of failure..
+An improvement to \zbf that would mitigate this issue would be to have the Tracker
+module provide checksums for each chunk. From the user's perspective, the
+\texttt{data-zf-hash} attribute currently used to store the hash of the file
+would be replaced with the hash of the JSON object storing a list of the hashes
+for each chunk. Upon connection to the tracker, each client would receive that
+list and verify its integrity, and then be able to verify and redownload each chunk
+independently in the event of failure.
 
 \subsection{Hybrid downloads over HTTP and P2P}
 
@@ -240,19 +298,43 @@ that subsequently time out could be redistributed more intelligently among
 peers with higher bandwidth connections.
 
 \subsection{Support for HTML5 media}
-It is possible to add functionality such that \zbf can construct \texttt{ReadableStream}s (as specified by the Streams standard) %TODO: cite https://streams.spec.whatwg.org
-from the chunks of data as it receives them. Using this stream, the DOM injection layer could feasibly replace HTML5 media elements such as embedded Video and Audio. Since these types of media are particularly large in size, being able to distribute them in a decentralized, peer-to-peer manner could provide substantial load reduction for the central server.
+It is possible to add functionality such that \zbf can construct
+\texttt{ReadableStream}s (as specified by the Streams standard)
+%TODO: cite https://streams.spec.whatwg.org
+from the chunks of data as it receives them. Using this stream, the DOM injection
+layer could feasibly replace HTML5 media elements such as embedded Video and Audio.
+Since these types of media are particularly large in size, being able to distribute
+them in a decentralized, peer-to-peer manner could provide substantial load
+reduction for the central server.
 
 \subsection{Automatic conversion to \zbf}
-% TODO
+Developers can integrate their sites to use \zbf by adding attribute tags to
+the site resources they wish to be distributed using the system. However, sites feature
+dozens of resources; as a result, adapting a site to use \zbf could present a
+burden on the developer. If we were to provide a script that developers could use
+to change HTML such that all resources were loaded using \zbf, this would ease
+integration pains.
 
 \section{Related work}
 
-% TODO
+% TODO cite peercdn in bibtex
+Currently, alternative peer-to-peer content delivery networks do exist. The three
+prominent peer-to-peer CDNs are PeerJS, PeerCDN, and Peer5. PeerJS is open-sourced
+and similarly transparent, but only encapsulates the functionality of our connection manager
+module. PeerCDN~\cite{peercdn} is a closed-source alternative providing  similar
+functionality to \zbf; it offloads site content delivery to users of a site,
+significantly lowering strain on the central source. However, PeerCDN was acquired by
+Yahoo! and no longer exists. Finally, Peer5 is a service used by companies today.
+Unfortunately, Peer5 is a paid service that is entirely closed-source; the Peer5 code is
+not transparent to the clients on which it runs.
 
 \section{Conclusions}
 
 % Katie
+\zbf is an open-sourced system
+that will allow developers to easily integrate a peer-to-peer CDN to expedite
+content delivery to clients even when operating under heavy load.
+
 
 
 {\footnotesize \bibliographystyle{ieeetr}
