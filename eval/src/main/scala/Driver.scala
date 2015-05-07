@@ -113,20 +113,45 @@ object Driver {
     asyncLoadPages(leechers, false)
     wait(leechers)
     val times = loadTimes(leechers)
-    times.sum / times.length
     quit(drivers)
+    times.sum / times.length
+  }
+
+  def httpOnly(numClients: Int): Float = {
+    val (windows, drivers) = prepare(numClients)
+    asyncLoadPages(windows, true)
+    wait(windows)
+    val times = loadTimes(windows)
+    quit(drivers)
+    times.sum / times.length
+  }
+
+  def fixedRatio(numLeechers: Int, seedToLeechRatio: Int): Float = {
+    require (seedToLeechRatio > 0)
+    seedLeech(numLeechers * seedToLeechRatio, numLeechers)
+  }
+
+  def httpToPeers(clientRange: Seq[Int], ratio: Int) {
+    println("http vs peer to peer")
+    println(s"for p2p, ${ratio} seeds for every leech")
+    for (cl <- clientRange) {
+      println(s"${cl} clients over p2p, ${fixedRatio(cl, ratio)} ms avg load time")
+      println(s"${cl} clients over http, ${httpOnly(cl)} ms avg load time")
+    }
+  }
+
+  def seedToLeech(seedRange: Seq[Int], leechRange: Seq[Int]) {
+    println("seed x leech heat map")
+    for (s <- seedRange) {
+      for (l <- leechRange) {
+        println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} ms avg load time")
+      }
+    }
   }
 
   def main(args: Array[String]) {
-    slt(10, 10)
-  }
-
-  def slt(maxSeed: Int, maxLeech: Int) {
-    for (s <- 1 to maxSeed) {
-      for (s <- 1 to maxLeech) {
-        println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} avg time")
-      }
-    }
+    seedToLeech(seedRange = 1 to 10, leechRange = 1 to 10)
+    httpToPeers(clientRange = 1 to 10, ratio = 3)
   }
 
 }
