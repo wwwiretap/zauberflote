@@ -6,62 +6,111 @@ import java.util.concurrent.TimeUnit._
 
 object Driver {
 
-  def run(numWindows: Int) {
-    val capabilities = DesiredCapabilities.chrome()
-    val url = new URL("http://localhost:9515")
-    val driver = new RemoteWebDriver(url, capabilities)
+  val WINDOWS_PER_DRIVER = 5
+  require(WINDOWS_PER_DRIVER > 0)
+
+  type Window = (RemoteWebDriver, String)
+
+  def switchTo(window: Window) {
+    window._1.switchTo().window(window._2)
+  }
+
+  def openWindow(driver: RemoteWebDriver) {
     val jse = driver.asInstanceOf[JavascriptExecutor]
-    for (i <- 1 until numWindows) {
-      jse.executeScript("window.open();");
+    jse.executeScript("window.open();")
+  }
+
+  def prepare(numWindows: Int): (Seq[(RemoteWebDriver, String)], Seq[RemoteWebDriver]) = {
+    val dc = DesiredCapabilities.chrome()
+    val url = new URL("http://localhost:9515")
+    val mod = numWindows % WINDOWS_PER_DRIVER
+    val numDrivers = numWindows / WINDOWS_PER_DRIVER + (if (mod != 0) 1 else 0)
+    val drivers = for (i <- 1 to numDrivers) yield {
+      new RemoteWebDriver(url, dc)
     }
-    var windows = driver.getWindowHandles()
-    def switchTo(window: String) {
-      driver.switchTo().window(window)
+    for {
+      (driver, i) <- drivers.zipWithIndex
+      toSpawn = if (i < drivers.length - 1 || mod == 0) WINDOWS_PER_DRIVER else mod
+      _ <- 1 until toSpawn
+    } {
+      openWindow(driver)
     }
-    for (window <- windows) {
-      switchTo(window)
-      jse.executeAsyncScript("""
-        var callback = arguments[arguments.length - 1];
-        callback();
-        setTimeout(function() {
-          // window.location = "http://localhost:8080/benchmark.html?http_only";
+    val windows = drivers flatMap { driver =>
+      driver.getWindowHandles() map { (driver, _) }
+    }
+    (windows, drivers)
+  }
+
+  def asyncLoadPage(window: Window, httpOnly: Boolean) {
+    switchTo(window)
+    val jse = window._1.asInstanceOf[JavascriptExecutor]
+    jse.executeAsyncScript(s"""
+      // hack to get around selenium having sync js executions
+      var callback = arguments[arguments.length - 1];
+      callback();
+      setTimeout(function() {
+        if (${httpOnly}) {
+          window.location = "http://localhost:8080/benchmark.html?http_only";
+        } else {
           window.location = "http://localhost:8080/benchmark.html";
-        }, 0);
-        """
-      )
-    }
-    def done(): Boolean = {
-      for (window <- windows) {
-        switchTo(window)
-        var res = jse.executeScript("""
-          return (window.loadTime || "");
-          """
-        )
-        if (res == null || res.asInstanceOf[String] == "") {
-          return false
         }
-      }
-      return true
-    }
+      }, 0);
+      """
+    )
+  }
 
-    while (!done()) {
-      Thread.sleep(1000)
+  def asyncLoadPages(windows: Seq[Window], httpOnly: Boolean) {
+    for (window <- windows) {
+      asyncLoadPage(window, httpOnly)
     }
+  }
 
+  def done(windows: Seq[Window]): Boolean = {
     for (window <- windows) {
       switchTo(window)
+      val jse = window._1.asInstanceOf[JavascriptExecutor]
+      var res = jse.executeScript("""
+        return (window.loadTime || "");
+        """
+        )
+      if (res == null || res.asInstanceOf[String] == "") {
+        return false
+      }
+    }
+    return true
+  }
+
+  def wait(windows: Seq[Window]) {
+    while (!done(windows)) {
+      Thread.sleep(500)
+    }
+  }
+
+  def quit(drivers: Seq[RemoteWebDriver]) {
+    for (driver <- drivers) {
+      driver.quit()
+    }
+  }
+
+  def loadTimes(windows: Seq[Window]): Seq[Float] = {
+    for (window <- windows) yield {
+      switchTo(window)
+      val jse = window._1.asInstanceOf[JavascriptExecutor]
       var res = jse.executeScript("""
         return loadTime;
         """
       )
-      println(res.asInstanceOf[String])
+      res.asInstanceOf[String].toFloat
     }
-    // driver.quit()
   }
 
   def main(args: Array[String]) {
-    run(5)
-    run(5)
+    val (windows, drivers) = prepare(12)
+    asyncLoadPages(windows, true)
+    wait(windows)
+    val times = loadTimes(windows)
+    quit(drivers)
+    println(times)
   }
 
 }
