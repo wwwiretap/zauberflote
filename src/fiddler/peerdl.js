@@ -28,6 +28,11 @@ function Tracker(socket) {
 }
 
 Tracker.prototype.getInfo = function(hash, callback) {
+  if (this.HTTP_ONLY === true) {
+    callback({hash: hash, size: -1, peers: []});
+    return;
+  }
+
   var seq = ++this.counter;
   var req = {seq: seq, hash: hash};
   this.socket.emit('peer-request', JSON.stringify(req));
@@ -389,7 +394,7 @@ function DownloadManager(tracker, connectionManager, hashfn) {
   this.connectionManager = connectionManager;
   this.hashfn = hashfn;
   this.downloaded = {};
-  this.chunkSize = 10 * 1024; // chunk size in bytes
+  this.chunkSize = 25 * 1024; // chunk size in bytes
   // the following implementation detail will probably change in order to
   // improve performance, but the DownloadManager API should stay the same
   this.pending = {}; // map from hash to Downloads
@@ -441,7 +446,8 @@ function xhrGet(url, callback) {
   // the server needs to send the Access-Control-Allow-Origin: *
   // header
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
+  // hack to avoid using cached data
+  xhr.open('GET', url + '?' + Math.random(), true);
   xhr.responseType = 'arraybuffer';
   xhr.onerror = function(e) {
     callback(null, e);

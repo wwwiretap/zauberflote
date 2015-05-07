@@ -3,7 +3,7 @@
  * Setup
  */
 
-var skt = io('http://i.anish.io:5000');
+var skt = io('http://localhost:5000');
 var tr = new Tracker(skt);
 var sc = new SignalingChannel(skt);
 var cm = new ConnectionManager(sc);
@@ -12,6 +12,10 @@ var dm = new DownloadManager(tr, cm, sha1.hash);
 /**
  * Automatic p2p download
  */
+
+if (window.location.toString().indexOf('http_only') !== -1) {
+  tr.HTTP_ONLY = true;
+}
 
 $(document).ready(function() {
   var p2pAssets = $('[data-zf-hash]');
