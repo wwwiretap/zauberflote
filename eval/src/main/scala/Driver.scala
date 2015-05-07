@@ -24,7 +24,7 @@ object Driver {
         var callback = arguments[arguments.length - 1];
         callback();
         setTimeout(function() {
-          window.location = "http://localhost:8000/frontend.html";
+          window.location = "http://localhost:8080/benchmark.html";
         }, 0);
         """
       )
