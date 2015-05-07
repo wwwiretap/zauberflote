@@ -255,13 +255,20 @@ websocket connection with that peer, the server passes that message to the peer.
 
 \section{Evaluation}
 
-% TODO simple HTML page loading one resource
-
-% TODO visual aid showing load time
+We tested \zbf on a simple site that loads one large 768KB image from a remote server.
+In our tests, we compare page load times using both plain HTTP and \zbf in a range of
+scenarios. Specifically, we varied two parameters: the number of seeding peers and the
+number of leeching peers. A seeding peer is a peer that has the desired resource, which
+in our tests, was the single image on the site. A leeching peer is a peer that desires the
+resource, so must request it either from the central site host or from peers with the resource.
+Our tests launched a certain number of seeding peers, then launched a number of
+leeching peers, measuring the average load latency for the leeching peers. We compare
+this latency data with the page load latency when the leeching peers must load the content from the
+central site host. 
 
 \subsection{Simulating the "reddit effect"}
 
-% TODO hosting resource (image) on throttled server
+Due to limitations
 
 \subsection{Testing infrastructure}
 
