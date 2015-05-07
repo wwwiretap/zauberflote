@@ -13,7 +13,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "shell", run: "always", inline: <<-SHELL
-    tc qdisc del dev eth0 root || true
+    tc qdisc del dev eth0 root >/dev/null 2>&1 || true
     tc qdisc add dev eth0 root handle 1:0 htb default 10
     tc class add dev eth0 parent 1:0 classid 1:10 htb rate 64kbps ceil 96kbps prio 0
     iptables -A OUTPUT -t mangle -p tcp --sport 80 -j MARK --set-mark 10
