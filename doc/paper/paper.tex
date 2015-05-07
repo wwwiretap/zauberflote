@@ -1,6 +1,6 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
 
-\usepackage{style, verbatim, url, graphicx}
+\usepackage{style, verbatim, url, graphicx, xspace}
 \usepackage[colorlinks=true, citecolor=blue, linkcolor=blue]{hyperref}
 \usepackage{caption}
 \usepackage{cleveref, breakurl}
@@ -14,7 +14,7 @@
 \makeatother
 \crefnames{part,chapter,section}{\S}{\S\S}
 
-\newcommand{\zbf}{Zauberfl\"{o}te}
+\newcommand{\zbf}{Zauberfl\"{o}te\xspace}
 \newcommand{\projtitle}{\zbf: A Transparent Peer-to-Peer CDN}
 \newcommand{\inclfigure}[3]{
     \begin{figure}
@@ -55,7 +55,7 @@ Typical means for dealing with this situation involve utilizing Content Delivery
 
 Currently, peer-to-peer content delivery networks do exist, yet are usually
 closed-source. PeerCDN~\cite{peercdn} is one such example found in
-industry; it offloads site hosting to users of a site, significantly lowering strain on content delivery from a central source. \zbf\ is an open-sourced system
+industry; it offloads site hosting to users of a site, significantly lowering strain on content delivery from a central source. \zbf is an open-sourced system
 that will allow developers to easily integrate a peer-to-peer CDN to expedite
 content delivery to clients even when operating under heavy load.
 
@@ -63,17 +63,17 @@ content delivery to clients even when operating under heavy load.
 clients requesting content will attempt to receive chunks of data from other
 clients, rather than retrieving the entire file from a central server.
 
-\section{\zbf\ API}
+\section{\zbf API}
 
-\zbf\ supports peer-to-peer loading for CSS (via \texttt{link} elements), Javascript (via \texttt{script} elements), and images (via \texttt{img} elements). In order for an existing website to utilize \zbf, the developer simply needs to make two changes to the DOM elements.
+\zbf supports peer-to-peer loading for CSS (via \texttt{link} elements), Javascript (via \texttt{script} elements), and images (via \texttt{img} elements). In order for an existing website to utilize \zbf, the developer simply needs to make two changes to the DOM elements.
 
-The first change that must be made is renaming the \texttt{src} or \texttt{href} attribute to  \texttt{data-zf-fallback}. \zbf\ uses the \texttt{data-zf-fallback} attribute in order to (1) prevent the browser from automatically fetching the resources, and (2) provide a URL to be used in the event that the peer-to-peer network is unable to serve the content.  
+The first change that must be made is renaming the \texttt{src} or \texttt{href} attribute to  \texttt{data-zf-fallback}. \zbf uses the \texttt{data-zf-fallback} attribute in order to (1) prevent the browser from automatically fetching the resources, and (2) provide a URL to be used in the event that the peer-to-peer network is unable to serve the content.
 
-The second attribute that must be present on a DOM element that is fetched by \zbf\ is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute is the SHA1 hash of that resource, which can be computed by the developer, and is utilized by \zbf\ in order to ensure integrity of data fetched via peer-to-peer interaction.
+The second attribute that must be present on a DOM element that is fetched by \zbf is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute is the SHA1 hash of that resource, which can be computed by the developer, and is utilized by \zbf in order to ensure integrity of data fetched via peer-to-peer interaction.
 
 \section{Implementation}
 
-The \zbf\ architecture consists of several loosely-connected components (see
+The \zbf architecture consists of several loosely-connected components (see
 figure~\ref{fig:components}). At the highest level, there is a download manager that
 provides a reliable download service. It relies on the tracker interface and
 the connection manager. The tracker interface facilitates communication with
@@ -85,7 +85,7 @@ WebSockets~\cite{w3c:websocket} for client-server communication and
 WebRTC~\cite{w3c:webrtc} for peer-to-peer communication.
 
 \inclfigure{fig:components}{components.pdf}{
-    Relationship between different client-side components of the \zbf\
+    Relationship between different client-side components of the \zbf
     peer-to-peer download service. Components in gray are standard browser
     APIs.
 }
@@ -113,14 +113,14 @@ preferring peer-to-peer over HTTP when possible.
 
 \subsubsection{Chunking}
 
-\zbf\ divides assets into chunks; chunks are individually requested and
+\zbf divides assets into chunks; chunks are individually requested and
 sent between peers. We use a standard chunk size of 10240 bytes in our
 implementation; preliminary tests showed this chunk size to be reasonable.
 When a client asks for a resource, the download manager for that client
 determines the number of chunks for that resource from the specified size.
 The download manager then evenly distributes requests for these chunks
 among the peers with the resource. \\
-Requests for chunks time out on a per-chunk basis. We track the time \zbf\
+Requests for chunks time out on a per-chunk basis. We track the time \zbf
 last sent a request for each chunk; if this time exceeds a cutoff, we randomly
 choose another peer with the resource and send the chunk request to that
 peer. We periodically retrieve an updated peers list for this resource
@@ -129,7 +129,7 @@ from the tracker.
 \subsubsection{Hash validation}
 
 When fetching content peer-to-peer, it is necessary to authenticate data that
-is downloaded. \zbf\ achieves this by using a cryptographic hash function to
+is downloaded. \zbf achieves this by using a cryptographic hash function to
 authenticate data that is downloaded. Assets that are to be downloaded
 peer-to-peer are identified by their hash, and once the download manager
 finishes downloading the content from peers, it verifies that the hash of the
@@ -140,7 +140,7 @@ from the fallback URL.
 
 \subsubsection{Parallelization}
 
-\zbf\ divides assets into chunks primarily to enable parallelization. Because
+\zbf divides assets into chunks primarily to enable parallelization. Because
 individual peers may not have high outbound bandwidth, it is beneficial to
 download in parallel from many peers. Our implementation parallelizes chunk
 downloads, with pending chunk requests balanced between available peers in the
@@ -179,7 +179,7 @@ to their specified peer recipient.
 
 \section{Server implementation}
 
-There are two main server-side components to \zbf\. First is the tracker,
+There are two main server-side components to \zbf. First is the tracker,
 which maintains a mapping from resource hashes to the peers that have that
 resource. Second is the WebRTC handshake channel, which passes information
 between peers to enable them to open WebRTC data channels.
@@ -210,37 +210,37 @@ websocket connection with that peer, the server passes that message to the peer.
 \section{Future work}
 
 \subsection{Per-chunk hash validation}
-As of right now, \zbf\ verifies the integrity of the downloaded resource once all chunks have been retrieved and joined. In normal circumstances where all chunks successfully download, this may not prove to be an issue. However, waiting until all chunks are downloaded and combined to verify the file means that if a single chunk had been corrupted or compromised, all chunks for the file would need to be downloaded, combined, and verified again.
+As of right now, \zbf verifies the integrity of the downloaded resource once all chunks have been retrieved and joined. In normal circumstances where all chunks successfully download, this may not prove to be an issue. However, waiting until all chunks are downloaded and combined to verify the file means that if a single chunk had been corrupted or compromised, all chunks for the file would need to be downloaded, combined, and verified again.
 
-An improvement to \zbf\ that would mitigate this issue would be to have the Tracker module provide checksums for each chunk. From the user's perspective, the \texttt{data-zf-hash} attribute currently used to store the hash of the file would be replaced with the hash of the JSON object storing a list of the hashes for each chunk. Upon connection to the tracker, each client would receive that list and verify its integrity, and then be able to verify and redownload each chunk independently in the event of failure.. 
+An improvement to \zbf that would mitigate this issue would be to have the Tracker module provide checksums for each chunk. From the user's perspective, the \texttt{data-zf-hash} attribute currently used to store the hash of the file would be replaced with the hash of the JSON object storing a list of the hashes for each chunk. Upon connection to the tracker, each client would receive that list and verify its integrity, and then be able to verify and redownload each chunk independently in the event of failure..
 
 \subsection{Hybrid downloads over HTTP and P2P}
 
-Another improvement to \zbf\ would be to allow it to parallelize downloads via HTTP and P2P transfers simultaneously. By using the \texttt{Range} HTTP header attribute, \zbf\ could fetch the same data as contained in P2P chunks from the HTTP fallback server. By utilizing both HTTP and P2P, \zbf\ may be able to provide service speed that is expected in all instances to be faster than simply using HTTP alone.
+Another improvement to \zbf would be to allow it to parallelize downloads via HTTP and P2P transfers simultaneously. By using the \texttt{Range} HTTP header attribute, \zbf could fetch the same data as contained in P2P chunks from the HTTP fallback server. By utilizing both HTTP and P2P, \zbf may be able to provide service speed that is expected in all instances to be faster than simply using HTTP alone.
 
 \subsection{Variable request sizes}
 
-Implementing variation in requested chunk sizes could allow \zbf\ to independently
+Implementing variation in requested chunk sizes could allow \zbf to independently
 determine a more optimal chunk size for each asset. For instance, we hypothesize
 that different chunk sizes are optimal for differently sized assets, and potentially
-for different media types. If \zbf\ more intelligently determined the optimal size
+for different media types. If \zbf more intelligently determined the optimal size
 of chunks for each resource, overall download latency would decrease.
 
 \subsection{Bandwidth detection and prioritization}
 
-If \zbf\ could detect which peers have higher bandwidth connections, and thus
-are more capable of swiftly delivering data to a client, \zbf\ could prioritize
-requesting data from these peers. Perhaps \zbf\ could request larger chunks from
-peers with higher bandwidth connections. \zbf\ could also dynamically react to
+If \zbf could detect which peers have higher bandwidth connections, and thus
+are more capable of swiftly delivering data to a client, \zbf could prioritize
+requesting data from these peers. Perhaps \zbf could request larger chunks from
+peers with higher bandwidth connections. \zbf could also dynamically react to
 poor connections with peers during the chunk requesting process; chunk requests
 that subsequently time out could be redistributed more intelligently among
 peers with higher bandwidth connections.
 
 \subsection{Support for HTML5 media}
-It is possible to add functionality such that \zbf\ can construct \texttt{ReadableStream}s (as specified by the Streams standard) %TODO: cite https://streams.spec.whatwg.org
+It is possible to add functionality such that \zbf can construct \texttt{ReadableStream}s (as specified by the Streams standard) %TODO: cite https://streams.spec.whatwg.org
 from the chunks of data as it receives them. Using this stream, the DOM injection layer could feasibly replace HTML5 media elements such as embedded Video and Audio. Since these types of media are particularly large in size, being able to distribute them in a decentralized, peer-to-peer manner could provide substantial load reduction for the central server.
 
-\subsection{Automatic conversion to \zbf }
+\subsection{Automatic conversion to \zbf}
 % TODO
 
 \section{Conclusions}
