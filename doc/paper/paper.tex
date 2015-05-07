@@ -53,6 +53,7 @@ In today's day and age, it's very common for personal blogs and other small webs
 
 Typical means for dealing with this situation involve utilizing Content Delivery Networks (CDNs), but these are usually out of the budgetary constraints for websites which only experience such loads on an occasional basis.
 
+% TODO cite peercdn in bibtex
 Currently, peer-to-peer content delivery networks do exist, yet are usually
 closed-source. PeerCDN~\cite{peercdn} is one such example found in
 industry; it offloads site hosting to users of a site, significantly lowering strain on content delivery from a central source. \zbf is an open-sourced system
@@ -62,6 +63,8 @@ content delivery to clients even when operating under heavy load.
 \zbf's design is based on the BitTorrent protocol~\cite{cohen:bittorrent}, where
 clients requesting content will attempt to receive chunks of data from other
 clients, rather than retrieving the entire file from a central server.
+
+% TODO talk about why this is a hard problem
 
 \section{\zbf API}
 
@@ -241,6 +244,10 @@ It is possible to add functionality such that \zbf can construct \texttt{Readabl
 from the chunks of data as it receives them. Using this stream, the DOM injection layer could feasibly replace HTML5 media elements such as embedded Video and Audio. Since these types of media are particularly large in size, being able to distribute them in a decentralized, peer-to-peer manner could provide substantial load reduction for the central server.
 
 \subsection{Automatic conversion to \zbf}
+% TODO
+
+\section{Related work}
+
 % TODO
 
 \section{Conclusions}
