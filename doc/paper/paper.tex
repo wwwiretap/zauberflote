@@ -225,7 +225,15 @@ information transfer between peers by directing offers, ICE candidates, and answ
 to their specified peer recipient.
 
 \subsection{DOM injection layer}
-% Ankush
+The DOM injection layer facilitates the link between the DOM as displayed in the browser and the entire peer-to-peer system. The DOM injection layer creates a websocket, and then instantiates a Tracker and Signaling Channel. It uses these to then instantiate a Connection Manager and in turn, uses this to instantiate a Download Manager.
+
+The DOM injection layer then iterates through all the DOM elements with the \texttt{data-zf-hash} and \texttt{data-zf-fallback} attributes. It the values of these attributes to fetch the data via the Download Manager. Upon receiving the data for each web element, the DOM injection layer creates an in-memory Blob and generates URL for this object. It then obeys the following rules, which can easily be expanded to support other DOM elements:
+
+\begin{description}
+\item[Script elements] have the \texttt{type} of their Blob set to \texttt{text/javascript}. They then have their \texttt{src} attribute set to the URL of the in-memory Blob.
+\item[Link elements] have the \texttt{type} of their Blob set to \texttt{text/css}. They then have their \texttt{href} attribute set to the URL of the in-memory Blob, and \texttt{rel} attribute set to \texttt{stylesheet}.
+\item[All other elements] have the \texttt{type} of their Blob set to \texttt{application/octet-stream}. They then have their \texttt{src} attribute set to the URL of the in-memory Blob. As most browsers can intelligently determine the content of \texttt{application/octet-stream} data, this functions properly for Image nodes, and serves as the generic template for any other node.
+\end{description}
 
 \section{Server implementation}
 
@@ -337,7 +345,7 @@ the site resources they wish to be distributed using the system. However, sites 
 dozens of resources; as a result, adapting a site to use \zbf could present a
 burden on the developer. If we were to provide a script that developers could use
 to change HTML such that all resources were loaded using \zbf, this would ease
-integration pains.
+integration pains and increase adoption.
 
 \section{Related work}
 
