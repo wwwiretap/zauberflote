@@ -104,13 +104,23 @@ object Driver {
     }
   }
 
+  def seedLeech(numSeeders: Int, numLeechers: Int): Float = {
+    val total = numSeeders + numLeechers
+    val (windows, drivers) = prepare(total)
+    val (seeders, leechers) = windows splitAt numSeeders
+    asyncLoadPages(seeders, true)
+    wait(seeders)
+    asyncLoadPages(leechers, false)
+    wait(leechers)
+    val times = loadTimes(leechers)
+    times.sum / times.length
+  }
+
   def main(args: Array[String]) {
-    val (windows, drivers) = prepare(12)
-    asyncLoadPages(windows, true)
-    wait(windows)
-    val times = loadTimes(windows)
-    quit(drivers)
-    println(times)
+    val s = 5
+    for (l <- 1 to 5) {
+      println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} avg time")
+    }
   }
 
 }
