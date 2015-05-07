@@ -114,11 +114,12 @@ object Driver {
     wait(leechers)
     val times = loadTimes(leechers)
     times.sum / times.length
+    quit(drivers)
   }
 
   def main(args: Array[String]) {
-    val s = 5
-    for (l <- 1 to 5) {
+    val l = 1
+    for (s <- 1 to 5) {
       println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} avg time")
     }
   }
