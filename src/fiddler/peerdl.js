@@ -332,9 +332,11 @@ Download.prototype.start = function() {
 }
 
 Download.prototype.timedOut = function(lastSent, numTries) {
-  var timeoutCutoff = 100; // 100 ms
+  var base = 100; // ms
+  var ceiling = 2000; // ms
+  var timeout = Math.min(base * Math.pow(2, numTries), ceiling); // ms
   var now = new Date();
-  if (lastSent == null || now.getTime() - lastSent > timeoutCutoff) {
+  if (lastSent == null || now.getTime() - lastSent > timeout) {
     return true;
   }
   return false;
