@@ -118,9 +118,14 @@ object Driver {
   }
 
   def main(args: Array[String]) {
-    val l = 1
-    for (s <- 1 to 5) {
-      println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} avg time")
+    slt(10, 10)
+  }
+
+  def slt(maxSeed: Int, maxLeech: Int) {
+    for (s <- 1 to maxSeed) {
+      for (s <- 1 to maxLeech) {
+        println(s"${s} seeders, ${l} leechers, ${seedLeech(s, l)} avg time")
+      }
     }
   }
 
