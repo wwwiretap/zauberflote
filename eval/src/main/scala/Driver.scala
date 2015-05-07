@@ -3,8 +3,6 @@ import org.openqa.selenium.remote._
 import java.net.URL
 import collection.JavaConversions._
 import java.util.concurrent.TimeUnit._
-import com.corundumstudio.socketio._
-import com.corundumstudio.socketio.listener._
 
 object Driver {
 
@@ -47,7 +45,7 @@ object Driver {
     }
 
     while (!done()) {
-      Thread.sleep(250)
+      Thread.sleep(1000)
     }
 
     for (window <- windows) {
@@ -58,16 +56,12 @@ object Driver {
       )
       println(res.asInstanceOf[String])
     }
-    driver.quit()
+    // driver.quit()
   }
 
   def main(args: Array[String]) {
-    var t = new Thread(new Runnable {
-      def run() { Driver.run(5) }
-    })
-    t.start()
     run(5)
-    t.join()
+    run(5)
   }
 
 }
