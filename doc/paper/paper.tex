@@ -16,11 +16,11 @@
 
 \newcommand{\zbf}{Zauberfl\"{o}te\xspace}
 \newcommand{\projtitle}{\zbf: A Transparent Peer-to-Peer CDN}
-\newcommand{\inclfigure}[3]{
+\newcommand{\inclfigure}[4]{
     \begin{figure}
         \begin{centering}
-            \includegraphics[width=.8\linewidth]{#2}
-            \caption{#3}
+            \includegraphics[angle=#3,width=.8\linewidth]{#2}
+            \caption{#4}
             \label{#1}
         \end{centering}
     \end{figure}
@@ -64,7 +64,7 @@ experience much smaller traffic loads, the hardware devoted to hosting them
 is typically not powerful enough to cope with this large influx of content requests.
 These sudden, unexpected bursts of traffic often result in websites loading at
 extremely slow speeds, or not loading at all, and is colloquially known as the
-"reddit hug of death" or the "reddit effect." \\
+``reddit hug of death'' or the ``reddit effect.'' \\
 
 Typical means for dealing with this situation involve utilizing Content Delivery
 Networks (CDNs), but these are usually out of the budgetary constraints for
@@ -123,7 +123,7 @@ is utilized by \zbf to ensure integrity of data fetched via peer-to-peer interac
 \section{Implementation}
 
 The \zbf architecture consists of several loosely-connected components (see
-figure~\ref{fig:components}). At the highest level, there is a download manager that
+\Cref{fig:components}). At the highest level, there is a download manager that
 provides a reliable download service. It relies on the tracker interface and
 the connection manager. The tracker interface facilitates communication with
 the central tracker for information about peers and file sizes, and the
@@ -133,7 +133,7 @@ Our components rely on two standard APIs provided by modern browsers,
 WebSockets~\cite{w3c:websocket} for client-server communication and
 WebRTC~\cite{w3c:webrtc} for peer-to-peer communication.
 
-\inclfigure{fig:components}{components.pdf}{
+\inclfigure{fig:components}{components.pdf}{0}{
     Relationship between different client-side components of the \zbf
     peer-to-peer download service. Components in gray are standard browser
     APIs.
@@ -275,12 +275,12 @@ leeching peers, measuring the average load latency for the leeching peers. We co
 this latency data with the page load latency when the leeching peers must load the content from the
 central site host.
 
-\subsection{Simulating the "reddit effect"}
+\subsection{Simulating the ``reddit effect''}
 Our tests involved programmatically opening browser windows and measuring load times.
 Due to limitations of the number of browser windows that can be reasonably opened
 and the memory overhead of Chrome, our browser testing environment of choice, we could
 not reasonably open enough browser windows to exactly imitate millions of simultaneous
-visitors to a site. Instead, we simulated the "reddit effect" by throttling the content delivery
+visitors to a site. Instead, we simulated the ``reddit effect'' by throttling the content delivery
 bandwidth of the central server hosting the desired resource. We limited the content delivery
 rate to 64 Kb/s and performed benchmark tests that compared the performance of \zbf
 against the HTTP content delivery latency under the throttled bandwidth conditions.
@@ -292,8 +292,6 @@ against the HTTP content delivery latency under the throttled bandwidth conditio
 % anish should probably do this section
 
 \subsection{Results}
- % TODO
-
 
 \subsubsection{Scalability of \zbf}
 The first empirical analysis that we performed was determining how page load time
@@ -301,41 +299,40 @@ over \zbf scales as we vary the number of users who have the page loaded (we cal
 these users \textit{seeders}) and the number of users attempting to concurrently
 download the page (we call these users \textit{leechers}).
 
-\begin{figure}[heatmap.pdf]
-% TODO: heatmap here
-\caption{Average page load time over P2P for seeders vs leechers}
-\end{figure}
+\inclfigure{fig:heatmap}{heatmap.eps}{-90}{
+    Average page load time over P2P for seeders vs leechers.
+}
 
-As seen in figure 1, the performance of \zbf depended on the seeder-to-leecher ratio.
-In general, the lowest latency in load time was achieved when the seeder-to-leecher
-ratio was highest. However, the system performed well in any condition with many
-seeder peers, reflecting the performance benefits provided by chunking of resources
-and parallelization of sending chunks. The system performed worst when there were many
-leechers and only a few seeders.
+As seen in \Cref{fig:heatmap}, the performance of \zbf depended on the
+seeder-to-leecher ratio. In general, the lowest latency in load time was
+achieved when the seeder-to-leecher ratio was highest. However, the system
+performed well in any condition with many seeder peers, reflecting the
+performance benefits provided by chunking of resources and parallelization of
+sending chunks. The system performed worst when there were many leechers and
+only a few seeders.
 
 
 
 \subsubsection{\zbf vs HTTP}
-% TODO: figure out ratio of seeders to leechers
-Our next empirical analysis was to keep the ratio of seeders to leechers constant at X,
-and compare the page load times for a throttled HTTP server vs \zbf as we increase the
-number of users attempting to concurrently load the page.
 
-\begin{figure}[lineplot.pdf]
-% TODO: other plot here
-% TODO: figure out ratio of seeders to leechers
-\caption{Average page load time over P2P compared to HTTP on throttled server assuming
-constant ratio of X seeders per leecher}
-\end{figure}
+Our next empirical analysis was to keep the ratio of seeders to leechers
+constant at 1, and compare the page load times for a throttled HTTP server vs
+\zbf as we increase the number of users attempting to concurrently load the
+page.
 
-As seen in figure 2, \zbf performed well in comparison to loading content over HTTP.
-While both experienced increases in content delivery latency with increasing numbers
-of peers requesting content, in general \zbf had lower latency than HTTP. Note
-that our simulated "reddit effect" implies hundreds of thousands of other
-simultaneous connection; however, since we are simulating the effect, these
-imaginary peers cannot distribute content to new peers. So, \zbf could potentially
-provide an even greater latency drop with more active seeding peers, which would
-be the case in a real-world scenario.
+\inclfigure{fig:scalability}{scalability.eps}{-90}{
+    Average page load time over P2P compared to HTTP on throttled server
+    assuming constant ratio of 1 seeder per leecher.
+}
+
+As seen in \Cref{fig:scalability}, \zbf performed well in comparison to
+loading content over HTTP. While both experienced increases in content delivery
+latency with increasing numbers of peers requesting content, in general \zbf
+had lower latency than HTTP. Note that our simulated ``reddit effect'' implies
+hundreds of thousands of other simultaneous connection; however, since we are
+simulating the effect, these imaginary peers cannot distribute content to new
+peers. So, \zbf could potentially provide an even greater latency drop with
+more active seeding peers, which would be the case in a real-world scenario.
 
 \section{Future work}
 

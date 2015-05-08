@@ -4,11 +4,14 @@ BUILD := \
 DEPS := \
 	style.sty \
 	paper.bib \
-	components.pdf
+	components.pdf \
+	scalability.eps \
+	heatmap.eps \
 
 LATEX  := pdflatex
 BIBTEX := bibtex
 DOT    := dot
+GNUPLOT := gnuplot
 
 RM      := rm
 RMFLAGS := -rf
@@ -37,3 +40,9 @@ clean:
 
 components.pdf: components.dot
 	$(DOT) -Tpdf $< > $@
+
+scalability.eps: scalability.plt scalability.dat
+	$(GNUPLOT) $<
+
+heatmap.eps: heatmap.plt heatmap.dat
+	$(GNUPLOT) $<
