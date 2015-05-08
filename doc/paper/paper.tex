@@ -273,7 +273,7 @@ resource, so must request it either from the central site host or from peers wit
 Our tests launched a certain number of seeding peers, then launched a number of
 leeching peers, measuring the average load latency for the leeching peers. We compare
 this latency data with the page load latency when the leeching peers must load the content from the
-central site host. 
+central site host.
 
 \subsection{Simulating the "reddit effect"}
 Our tests involved programmatically opening browser windows and measuring load times.
@@ -282,7 +282,7 @@ and the memory overhead of Chrome, our browser testing environment of choice, we
 not reasonably open enough browser windows to exactly imitate millions of simultaneous
 visitors to a site. Instead, we simulated the "reddit effect" by throttling the content delivery
 bandwidth of the central server hosting the desired resource. We limited the content delivery
-rate to 64 Kb/s and performed benchmark tests that compared the performance of \zbf 
+rate to 512 Kb/s (64 KB/s) and performed benchmark tests that compared the performance of \zbf
 against the HTTP content delivery latency under the throttled bandwidth conditions.
 
 
@@ -303,15 +303,18 @@ The first empirical analysis that we performed was determining how page load tim
 \caption{Average page load time over P2P for seeders vs leechers}
 \end{figure}
 
+% TODO: Analyze the plot here
+
+
 \subsubsection{\zbf vs HTTP}
-% TODO: figure out ratio of seeders to leechers
-Our next empirical analysis was to keep the ratio of seeders to leechers constant at X, and compare the page load times for a throttled HTTP server vs \zbf as we increase the number of users attempting to concurrently load the page. 
+Our next empirical analysis was to keep the ratio of seeders to leechers constant at 1:1, and compare the page load times for a throttled HTTP server vs \zbf as we increase the number of users attempting to concurrently load the page.
 
 \begin{figure}[h]
 % TODO: other plot here
-% TODO: figure out ratio of seeders to leechers
-\caption{Average page load time over P2P compared to HTTP on throttled server assuming constant ratio of X seeders per leecher}
+\caption{Average page load time over P2P compared to HTTP on throttled server assuming constant ratio of 1 seeder per leecher}
 \end{figure}
+
+% TODO: Analyze the plot here
 
 \section{Future work}
 
