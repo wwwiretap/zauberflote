@@ -301,35 +301,41 @@ over \zbf scales as we vary the number of users who have the page loaded (we cal
 these users \textit{seeders}) and the number of users attempting to concurrently
 download the page (we call these users \textit{leechers}).
 
-\begin{figure}[h]
+\begin{figure}[heatmap.pdf]
 % TODO: heatmap here
 \caption{Average page load time over P2P for seeders vs leechers}
 \end{figure}
 
-% TODO: Analyze the plot here
-
-
-\subsubsection{\zbf vs HTTP}
-As seen in fig 1, the performance of \zbf depended on the seeder-to-leecher ratio.
+As seen in figure 1, the performance of \zbf depended on the seeder-to-leecher ratio.
 In general, the lowest latency in load time was achieved when the seeder-to-leecher
 ratio was highest. However, the system performed well in any condition with many
 seeder peers, reflecting the performance benefits provided by chunking of resources
 and parallelization of sending chunks. The system performed worst when there were many
 leechers and only a few seeders.
 
+
+
+\subsubsection{\zbf vs HTTP}
 % TODO: figure out ratio of seeders to leechers
 Our next empirical analysis was to keep the ratio of seeders to leechers constant at X,
 and compare the page load times for a throttled HTTP server vs \zbf as we increase the
 number of users attempting to concurrently load the page.
 
-\begin{figure}[h]
+\begin{figure}[lineplot.pdf]
 % TODO: other plot here
 % TODO: figure out ratio of seeders to leechers
 \caption{Average page load time over P2P compared to HTTP on throttled server assuming
 constant ratio of X seeders per leecher}
 \end{figure}
 
-% TODO: Analyze the plot here
+As seen in figure 2, \zbf performed well in comparison to loading content over HTTP.
+While both experienced increases in content delivery latency with increasing numbers
+of peers requesting content, in general \zbf had lower latency than HTTP. Note
+that our simulated "reddit effect" implies hundreds of thousands of other
+simultaneous connection; however, since we are simulating the effect, these
+imaginary peers cannot distribute content to new peers. So, \zbf could potentially
+provide an even greater latency drop with more active seeding peers, which would
+be the case in a real-world scenario.
 
 \section{Future work}
 
