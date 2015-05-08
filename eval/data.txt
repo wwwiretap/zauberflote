@@ -158,4 +158,13 @@ for p2p, 1 seeds for every leech
 27 clients over http, 29752.74 ms avg load time
 28 clients over p2p, 21693.393 ms avg load time
 28 clients over http, 23966.678 ms avg load time
-
+29 clients over p2p, 22123.621 ms avg load time
+29 clients over http, 17280.793 ms avg load time
+30 clients over p2p, 25020.967 ms avg load time
+30 clients over http, 26080.934 ms avg load time
+31 clients over p2p, 25964.549 ms avg load time
+31 clients over http, 26518.936 ms avg load time
+32 clients over p2p, 28072.719 ms avg load time
+32 clients over http, 31753.438 ms avg load time
+33 clients over p2p, 30483.363 ms avg load time
+33 clients over http, 27414.727 ms avg load time
