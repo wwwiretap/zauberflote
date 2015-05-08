@@ -23,7 +23,7 @@ TARGETS := $(patsubst %, %.pdf, $(BUILD))
 all: $(TARGETS)
 
 clean:
-	$(RM) $(RMFLAGS) *.aux *.log *.blg *.bbl *.ent *.dvi *.ps *.pdf
+	$(RM) $(RMFLAGS) *.aux *.log *.blg *.bbl *.ent *.out *.dvi *.ps *.pdf
 
 .PHONY: all clean
 
