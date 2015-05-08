@@ -313,7 +313,7 @@ these users \textit{seeders}) and the number of users attempting to concurrently
 download the page (we call these users \textit{leechers}).
 
 \inclfigure{fig:heatmap}{heatmap.eps}{-90}{
-    Average page load time over P2P for seeders vs leechers.
+    Average page load time (lower is better) over P2P for seeders vs leechers.
 }
 
 As seen in \Cref{fig:heatmap}, the performance of \zbf depended on the
@@ -334,8 +334,8 @@ constant at 1, and compare the page load times for a throttled HTTP server vs
 page.
 
 \inclfigure{fig:scalability}{scalability.eps}{-90}{
-    Average page load time over P2P compared to HTTP on throttled server
-    assuming constant ratio of 1 seeder per leecher.
+    Average page load time (lower is better) over P2P compared to HTTP on
+    throttled server assuming constant ratio of 1 seeder per leecher.
 }
 
 As seen in \Cref{fig:scalability}, \zbf performed well in comparison to
