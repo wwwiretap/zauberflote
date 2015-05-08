@@ -273,7 +273,7 @@ resource, so must request it either from the central site host or from peers wit
 Our tests launched a certain number of seeding peers, then launched a number of
 leeching peers, measuring the average load latency for the leeching peers. We compare
 this latency data with the page load latency when the leeching peers must load the content from the
-central site host. 
+central site host.
 
 \subsection{Simulating the "reddit effect"}
 Our tests involved programmatically opening browser windows and measuring load times.
@@ -282,7 +282,7 @@ and the memory overhead of Chrome, our browser testing environment of choice, we
 not reasonably open enough browser windows to exactly imitate millions of simultaneous
 visitors to a site. Instead, we simulated the "reddit effect" by throttling the content delivery
 bandwidth of the central server hosting the desired resource. We limited the content delivery
-rate to 64 Kb/s and performed benchmark tests that compared the performance of \zbf 
+rate to 64 Kb/s and performed benchmark tests that compared the performance of \zbf
 against the HTTP content delivery latency under the throttled bandwidth conditions.
 
 
@@ -296,7 +296,10 @@ against the HTTP content delivery latency under the throttled bandwidth conditio
 
 
 \subsubsection{Scalability of \zbf}
-The first empirical analysis that we performed was determining how page load time over \zbf scales as we vary the number of users who have the page loaded (we call these users \textit{seeders}) and the number of users attempting to concurrently download the page (we call these users \textit{leechers}).
+The first empirical analysis that we performed was determining how page load time
+over \zbf scales as we vary the number of users who have the page loaded (we call
+these users \textit{seeders}) and the number of users attempting to concurrently
+download the page (we call these users \textit{leechers}).
 
 \begin{figure}[h]
 % TODO: heatmap here
@@ -304,13 +307,23 @@ The first empirical analysis that we performed was determining how page load tim
 \end{figure}
 
 \subsubsection{\zbf vs HTTP}
+As seen in fig 1, the performance of \zbf depended on the seeder-to-leecher ratio.
+In general, the lowest latency in load time was achieved when the seeder-to-leecher
+ratio was highest. However, the system performed well in any condition with many
+seeder peers, reflecting the performance benefits provided by chunking of resources
+and parallelization of sending chunks. The system performed worst when there were many
+leechers and only a few seeders.
+
 % TODO: figure out ratio of seeders to leechers
-Our next empirical analysis was to keep the ratio of seeders to leechers constant at X, and compare the page load times for a throttled HTTP server vs \zbf as we increase the number of users attempting to concurrently load the page. 
+Our next empirical analysis was to keep the ratio of seeders to leechers constant at X,
+and compare the page load times for a throttled HTTP server vs \zbf as we increase the
+number of users attempting to concurrently load the page.
 
 \begin{figure}[h]
 % TODO: other plot here
 % TODO: figure out ratio of seeders to leechers
-\caption{Average page load time over P2P compared to HTTP on throttled server assuming constant ratio of X seeders per leecher}
+\caption{Average page load time over P2P compared to HTTP on throttled server assuming
+constant ratio of X seeders per leecher}
 \end{figure}
 
 \section{Future work}
@@ -390,10 +403,14 @@ not transparent to the clients on which it runs.
 
 \section{Conclusions}
 
-% TODO: Katie
-\zbf is an open-sourced system
-that will allow developers to easily integrate a peer-to-peer CDN to expedite
-content delivery to clients even when operating under heavy load.
+\zbf is an open-sourced system that will allow developers to easily utilize
+a peer-to-peer CDN to increase the content delivery bandwidth of their sites,
+even when operating under heavy request loads. Preliminary data shows that
+the system performs well under medium and high workloads, and when the
+seeder-to-leecher ratio is high. Future work could refine the system
+such that it works well in a wide variety of scenarios. Our results show that peer-to-peer
+CDNs are a promising low-cost alternative to CDNs that require on an extensive
+network of server and server infrastructure.
 
 
 
