@@ -16,4 +16,5 @@ set ylabel 'Seeders'
 set terminal postscript
 set output "heatmap.eps"
 
+set cbrange [0:20000]
 splot "heatmap.dat" using 1:2:3 with pm3d
