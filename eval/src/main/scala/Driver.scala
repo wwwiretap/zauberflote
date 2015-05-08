@@ -155,7 +155,7 @@ object Driver {
 
   def main(args: Array[String]) {
     seedToLeech(seedRange = 1 to 10, leechRange = 1 to 10)
-    httpToPeers(clientRange = 1 to 10, ratio = 3)
+    httpToPeers(clientRange = 1 to 50, ratio = 1)
   }
 
 }
