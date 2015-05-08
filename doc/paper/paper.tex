@@ -380,8 +380,7 @@ peers with higher bandwidth connections.
 
 \subsection{Support for HTML5 media}
 It is possible to add functionality such that \zbf can construct
-\texttt{ReadableStream}s (as specified by the Streams standard)
-%TODO: cite https://streams.spec.whatwg.org
+\texttt{ReadableStream}s (as specified by the Streams standard~\cite{whatwg:streams})
 from the chunks of data as it receives them. Using this stream, the DOM injection
 layer could feasibly replace HTML5 media elements such as embedded Video and Audio.
 Since these types of media are particularly large in size, being able to distribute
@@ -398,7 +397,6 @@ integration pains and increase adoption.
 
 \section{Related work}
 
-%! TODO cite peercdn in bibtex
 Currently, alternative peer-to-peer content delivery networks do exist. The three
 prominent peer-to-peer CDNs are PeerJS, PeerCDN, and Peer5. PeerJS is open-sourced
 and similarly transparent, but only encapsulates the functionality of our connection manager
