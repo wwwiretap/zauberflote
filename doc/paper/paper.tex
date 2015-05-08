@@ -45,16 +45,19 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-\zbf is a peer-to-peer system based on the BitTorrent protocol that uses WebRTC
-to distribute content between peers. \zbf provides an easily accessible way for
-developers to alleviate content delivery bandwidth concerns by marking DOM elements
-such that \zbf will fetch these resources from peers with that resource. The \zbf
-system has server-side tracker and WebRTC signaling channel components, as well
-as client-side scripting that requests and delivers content between peers.
-This version of the system implements basic chunking, parallelism, and fault tolerance.
-In this paper, we describe the motivation for \zbf and the design and implementation of the
-different components that comprise the system. We then detail future improvements
-that could be made to increase the robustness and performance of the overall system.
+
+\zbf is a peer-to-peer content delivery network. The system uses WebRTC to
+cache and distribute content between peers. \zbf provides an easily accessible
+way for developers to alleviate content delivery bandwidth concerns by marking
+DOM elements such that \zbf will fetch these resources from peers with that
+resource. The \zbf system has server-side tracker and WebRTC signaling channel
+components, as well as client-side scripting that requests and delivers content
+between peers. This version of the system implements basic chunking,
+parallelism, and fault tolerance. In this paper, we describe the motivation for
+\zbf and the design and implementation of the different components that
+comprise the system. We then detail future improvements that could be made to
+increase the robustness and performance of the overall system.
+
 \end{abstract}
 
 \section{Introduction}
