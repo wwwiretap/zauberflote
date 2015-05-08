@@ -90,14 +90,14 @@ clients, rather than retrieving the entire file from a central server. As
 with BitTorrent trackers, any developer could host their own tracker and service
 it to connect peers requesting a resource with peers distributing the resource.
 
-The \zbf client-side code runs purely in the browser, and is completely transparent
-to the user. The user does not have to install any application on their
-computer to obtain desired resources peer-to-peer. As a result, the \zbf client
-code only runs when a user is currently visiting the website, therefore adding
-no burden to the user from constant background processes.
+The \zbf client-side code runs purely in the browser and is completely
+transparent to the user. The user does not have to install any application on
+their computer to obtain desired resources peer-to-peer. As a result, the \zbf
+client code only runs when a user is currently visiting the website, adding no
+burden to the user from constant background processes.
 
 In designing \zbf, we took into consideration the unique problems presented
-by browser-to-browser content streaming. Website visitor churn is often very
+by browser-to-browser content sharing. Website visitor churn is often very
 high with any type of website; our system had to be robust under these common
 conditions. \zbf forms peer-to-peer connections quickly and immediately streams
 requested resources through these data channel connections. \zbf also recovers
@@ -166,7 +166,7 @@ preferring peer-to-peer over HTTP when possible.
 \subsubsection{Chunking}
 
 \zbf divides assets into chunks; chunks are individually requested and
-sent between peers. We use a standard chunk size of 10240 bytes in our
+sent between peers. We use a standard chunk size of 25 KB in our
 implementation; preliminary tests showed this chunk size to be reasonable.
 When a client asks for a resource, the download manager for that client
 determines the number of chunks for that resource from the resource's total size.
