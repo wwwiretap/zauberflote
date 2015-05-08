@@ -288,8 +288,17 @@ against the HTTP content delivery latency under the throttled bandwidth conditio
 
 \subsection{Testing infrastructure}
 
-% TODO selenium with chromedriver & scala
-% anish should probably do this section
+Our testing infrastructure was made up of a virtual machine hosting our
+website, a tracker running on the host machine, and a collection of web
+browsers acting as clients. All test code ran on the same physical machine. We
+used Vagrant to provision an Ubuntu 14.04 LTS virtual machine running nginx
+1.4.6 to serve a test page designed for benchmarking. To simulate a
+low-resource server / heavy loads, we used kernel traffic shaping to limit the
+outbound bandwidth of the virtual machine. To simulate browser clients, we
+wrote a test driver in Scala that made use of Selenium WebDriver and
+ChromeDriver to launch and control Google Chrome browser windows. The test
+driver spawned and communicated with browser windows and benchmark code through
+Javascript so it could measure page load times.
 
 \subsection{Results}
 
