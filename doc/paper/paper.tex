@@ -67,13 +67,13 @@ experience much smaller traffic loads, the hardware devoted to hosting them
 is typically not powerful enough to cope with this large influx of content requests.
 These sudden, unexpected bursts of traffic often result in websites loading at
 extremely slow speeds, or not loading at all, and is colloquially known as the
-``reddit hug of death'' or the ``reddit effect.'' \\
+``reddit hug of death'' or the ``reddit effect.''
 
 Typical means for dealing with this situation involve utilizing Content
 Delivery Networks (CDNs), but these are expensive, especially for websites
 which only experience such high loads on an occasional basis. An ideal solution
 would be a lightweight means to mimic the benefits of an ordinary CDN, which is
-typically backed by a robust network of machines. \\
+typically backed by a robust network of machines.
 
 In this paper, we present \zbf, a peer-to-peer CDN. \zbf provides an easy way
 for developers to distribute content to clients via a peer-to-peer network,
@@ -82,19 +82,19 @@ is comprised of a server-side component and a client-side component. The
 centralized, server-side component both tracks resource propagation metadata
 and acts as an assist for opening peer-to-peer data channel connections. The
 lightweight client-side component requests resources from peers and distributes
-resources in response to peer requests. \\
+resources in response to peer requests.
 
 \zbf's design is based on the BitTorrent protocol~\cite{cohen:bittorrent}, by which
 clients requesting content attempt to receive chunks of data from other
 clients, rather than retrieving the entire file from a central server. As
 with BitTorrent trackers, any developer could host their own tracker and service
-it to connect peers requesting a resource with peers distributing the resource. \\
+it to connect peers requesting a resource with peers distributing the resource.
 
 The \zbf client-side code runs purely in the browser, and is completely transparent
 to the user. The user does not have to install any application on their
 computer to obtain desired resources peer-to-peer. As a result, the \zbf client
 code only runs when a user is currently visiting the website, therefore adding
-no burden to the user from constant background processes. \\
+no burden to the user from constant background processes.
 
 In designing \zbf, we took into consideration the unique problems presented
 by browser-to-browser content streaming. Website visitor churn is often very
@@ -110,13 +110,13 @@ peers.
 \zbf supports peer-to-peer loading for CSS (via \texttt{link} elements),
 Javascript (via \texttt{script} elements), and images (via \texttt{img} elements).
 For an existing website to utilize \zbf, the developer simply needs
-to make two changes to the DOM elements. \\
+to make two changes to the DOM elements.
 
 The first change is renaming the \texttt{src} or \texttt{href} attribute to
 \texttt{data-zf-fallback}. \zbf uses the \texttt{data-zf-fallback} attribute
 in order to (1) prevent the browser from automatically fetching the resources,
 and (2) provide a URL to be used in the event that the peer-to-peer network
-is unable to serve the content. \\
+is unable to serve the content.
 
 The second attribute that must be present on a DOM element that is fetched by
 \zbf is the \texttt{data-zf-hash} attribute. The \texttt{data-zf-hash} attribute
@@ -130,7 +130,7 @@ The \zbf architecture consists of several loosely-connected components (see
 provides a reliable download service. It relies on the tracker interface and
 the connection manager. The tracker interface facilitates communication with
 the central tracker for information about peers and file sizes, and the
-connection manager provides an interface for peer-to-peer message transfer. \\
+connection manager provides an interface for peer-to-peer message transfer.
 
 Our components rely on two standard APIs provided by modern browsers,
 WebSockets~\cite{w3c:websocket} for client-server communication and
@@ -171,7 +171,8 @@ implementation; preliminary tests showed this chunk size to be reasonable.
 When a client asks for a resource, the download manager for that client
 determines the number of chunks for that resource from the resource's total size.
 The download manager then evenly distributes requests for these chunks
-among the peers with the resource. \\
+among the peers with the resource.
+
 Requests for chunks time out on a per-chunk basis. We track the time \zbf
 last sent a request for each chunk; if this time exceeds a cutoff, we randomly
 choose another peer with the resource and send the chunk request to that
@@ -358,7 +359,7 @@ chunks have been retrieved and joined. In normal circumstances where all chunks
 successfully download, this may not prove to be an issue. However, waiting until
 all chunks are downloaded and combined to verify the file means that if a single
 chunk had been corrupted or compromised, all chunks for the file would need to be
-downloaded, combined, and verified again. \\
+downloaded, combined, and verified again.
 
 An improvement to \zbf that would mitigate this issue would be to have the Tracker
 module provide checksums for each chunk. From the user's perspective, the
